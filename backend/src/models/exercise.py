@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass
 from typing import Optional
 
@@ -9,7 +10,7 @@ class ExerciseDefinition:
     id: int
     name: str
     explanation: str
-    coach_id: Optional[int] = None  # None = catalogo global de la app
+    coach_id: Optional[uuid.UUID] = None  # None = catalogo global
     muscle_group: Optional[str] = None
     video_url: Optional[str] = None
     image_url: Optional[str] = None

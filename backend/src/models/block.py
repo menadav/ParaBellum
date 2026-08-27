@@ -1,5 +1,6 @@
 import datetime
 import enum
+import uuid
 from dataclasses import dataclass
 from typing import Optional
 
@@ -32,8 +33,8 @@ class Block:
 
     id: int
     name: str
-    coach_id: int
-    athlete_id: int
+    coach_id: uuid.UUID
+    athlete_id: uuid.UUID
     total_weeks: int
     start_date: datetime.date
     status: BlockStatus = BlockStatus.DRAFT
