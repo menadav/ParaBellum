@@ -8,3 +8,8 @@ env/
 .env
 .pytest_cache/
 .mypy_cache/
+
+# Datos reales de atletas: nunca a git (RGPD)
+*.xlsx
+*.xls
+*.csv

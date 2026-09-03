@@ -125,6 +125,13 @@ create index idx_set_logs_exercise        on set_logs (exercise_id);
 create index idx_set_logs_completed       on set_logs (completed_at);
 create index idx_messages_receiver_unread on messages (receiver_id, is_read);
 
+-- Un atleta solo puede tener UN bloque activo. Indice unico parcial:
+-- el WHERE limita la unicidad a las filas activas, asi que puede tener
+-- muchos bloques completados pero solo uno en curso.
+create unique index un_solo_bloque_activo_por_atleta
+    on blocks (athlete_id)
+    where status = 'active';
+
 
 alter table profiles             enable row level security;
 alter table blocks               enable row level security;
