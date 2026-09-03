@@ -58,11 +58,3 @@ def update_status(
         "update profiles set status = %s where id = %s",
         (status, user_id),
     )
-
-
-# Nota: no hay create().
-#
-# Los perfiles no se crean desde aqui: los crea solo el trigger
-# on_auth_user_created cuando alguien se registra en Supabase Auth.
-# Si escribieras un create() tendrias dos caminos para crear un usuario
-# y antes o despues se contradirian.
