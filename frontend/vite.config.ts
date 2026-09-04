@@ -7,6 +7,11 @@ export default defineConfig({
     host: true,
     // Vite rechaza peticiones cuyo Host no reconoce, y el de ngrok
     // cambia en cada sesion. Solo afecta al servidor de desarrollo.
-    allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io"],
+    allowedHosts: [
+      ".ngrok-free.dev",
+      ".ngrok-free.app",
+      ".ngrok.app",
+      ".ngrok.io",
+    ],
   },
 });

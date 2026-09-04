@@ -51,9 +51,20 @@ _origenes = os.environ.get(
     "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
 ).split(",")
 
+# Los tuneles de ngrok cambian de subdominio en cada sesion, asi que
+# no se pueden listar uno a uno. El patron los cubre todos.
+#
+# TEMPORAL: quitar antes de abrir la app a atletas reales. Deja que
+# cualquier pagina servida por ngrok llame a esta API desde el
+# navegador. Hoy no es grave porque el token va en una cabecera que
+# esa pagina no puede leer, pero es una puerta que no hace falta
+# dejar abierta cuando exista una URL fija.
+_NGROK = r"https://[a-z0-9-]+\.ngrok(-free)?\.(dev|app|io)"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _origenes if o.strip()],
+    allow_origin_regex=_NGROK,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
