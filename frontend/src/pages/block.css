@@ -531,3 +531,13 @@
   font-size: 0.8rem;
   color: var(--danger);
 }
+
+
+.semana-vacia {
+  padding: var(--sp-5);
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 0.875rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+}

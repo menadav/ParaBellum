@@ -23,9 +23,11 @@ export function BlockPage() {
     queryKey: ["bloque", id],
     queryFn: () => api.block(id),
   });
+  // Todas las sesiones del bloque de una vez: hacen falta las de la
+  // semana que se ve Y saber si el bloque esta vacio del todo.
   const entrenosQ = useQuery({
-    queryKey: ["entrenos", id, semana],
-    queryFn: () => api.workouts(id, semana),
+    queryKey: ["entrenos", id],
+    queryFn: () => api.workouts(id),
     enabled: !!bloqueQ.data,
   });
 
@@ -42,7 +44,9 @@ export function BlockPage() {
   if (bloqueQ.error) return <ErrorBox error={bloqueQ.error} />;
 
   const bloque = bloqueQ.data!;
-  const entrenos = entrenosQ.data ?? [];
+  const todos = entrenosQ.data ?? [];
+  const entrenos = todos.filter((w) => w.week_number === semana);
+  const bloqueVacio = todos.length === 0;
   const inicio = new Date(bloque.start_date);
 
   return (
@@ -132,9 +136,9 @@ export function BlockPage() {
 
       {entrenosQ.isLoading ? (
         <Spinner />
-      ) : entrenos.length === 0 ? (
+      ) : bloqueVacio ? (
         <section className="card">
-          <GenerarSesiones blockId={id} />
+          <GenerarSesiones blockId={id} totalSemanas={bloque.total_weeks} />
         </section>
       ) : (
         <div className="stack" style={{ gap: "var(--sp-4)" }}>
@@ -144,6 +148,12 @@ export function BlockPage() {
               semana={semana}
               ocupados={entrenos.map((w) => w.day_of_week)}
             />
+          )}
+          {entrenos.length === 0 && (
+            <p className="semana-vacia">
+              La semana {semana} no tiene sesiones. Añádelas con el botón
+              de arriba.
+            </p>
           )}
           {entrenos.map((w) => (
             <WorkoutCard
@@ -162,7 +172,13 @@ export function BlockPage() {
   );
 }
 
-function GenerarSesiones({ blockId }: { blockId: number }) {
+function GenerarSesiones({
+  blockId,
+  totalSemanas,
+}: {
+  blockId: number;
+  totalSemanas: number;
+}) {
   const qc = useQueryClient();
   const [dias, setDias] = useState<Weekday[]>([0, 2, 4]);
 
@@ -174,7 +190,8 @@ function GenerarSesiones({ blockId }: { blockId: number }) {
           .sort((a, b) => a - b)
           .map((_, i) => `Día ${i + 1}`),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["entrenos"] }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["entrenos", blockId] }),
   });
 
   const alternar = (d: Weekday) =>
@@ -213,7 +230,9 @@ function GenerarSesiones({ blockId }: { blockId: number }) {
           <Icon name="plus" size={16} />
           {generar.isPending
             ? "Generando…"
-            : `Generar ${dias.length} día${dias.length === 1 ? "" : "s"} por semana`}
+            : `Generar ${dias.length} × ${totalSemanas} = ${
+                dias.length * totalSemanas
+              } sesiones`}
         </button>
       </div>
     </div>

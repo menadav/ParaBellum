@@ -102,13 +102,17 @@ function DiasEntreno({ blockId }: { blockId?: number }) {
   const [q] = useQueries({
     queries: [
       {
-        queryKey: ["entrenos", blockId, 1],
-        queryFn: () => api.workouts(blockId!, 1),
+        queryKey: ["entrenos", blockId],
+        queryFn: () => api.workouts(blockId!),
         enabled: blockId != null,
       },
     ],
   });
-  const activos = new Set((q.data ?? []).map((w) => w.day_of_week));
+  const activos = new Set(
+    (q.data ?? [])
+      .filter((w) => w.week_number === 1)
+      .map((w) => w.day_of_week)
+  );
 
   return (
     <div className="dias">

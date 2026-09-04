@@ -248,7 +248,14 @@ def generar_sesiones(
     except ValueError as e:
         raise HTTPException(400, str(e))
 
-    workouts.create_many(conn, sesiones)
+    try:
+        workouts.create_many(conn, sesiones)
+    except psycopg.errors.UniqueViolation:
+        raise HTTPException(
+            409,
+            "Este bloque ya tiene sesiones. Anade los dias que falten "
+            "de uno en uno en lugar de generarlo entero.",
+        )
     return workouts.list_for_block(conn, block_id)
 
 

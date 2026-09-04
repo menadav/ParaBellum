@@ -7,6 +7,7 @@ import type { User } from "../lib/types";
 import { Icon } from "../components/Icon";
 import { ErrorBox, StatusPill } from "../components/UI";
 import { useTheme } from "../theme";
+import { CambiarPassword } from "./CambiarPassword";
 
 export function SettingsPage() {
   const usuario = useOutletContext<User>();
@@ -27,6 +28,7 @@ export function SettingsPage() {
       </div>
 
       <Perfil usuario={usuario} />
+      <CambiarPassword />
       <Preferencias usuario={usuario} />
 
       <section className="card">
