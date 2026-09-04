@@ -117,7 +117,6 @@ export function HomePage() {
   );
 }
 
-/** Cuantos bloques acaban en cada una de las proximas 4 semanas. */
 function BloquesQueTerminan({ bloques }: { bloques: Block[] }) {
   const hoy = new Date();
   const tramos = [0, 1, 2, 3].map((i) => {

@@ -1,4 +1,3 @@
-"""Tests de las series registradas."""
 
 import psycopg
 import pytest
@@ -51,7 +50,6 @@ def test_upsert_crea_la_serie(conn, exercise_id):
 
 
 def test_los_pesos_llegan_como_float_no_como_decimal(conn, exercise_id):
-    """Sin esta conversion, estimated_1rm reventaria."""
     set_logs.upsert(conn, una_serie(exercise_id, peso=102.5, rpe=8.5))
 
     s = set_logs.list_for_exercise(conn, exercise_id)[0]
@@ -62,7 +60,6 @@ def test_los_pesos_llegan_como_float_no_como_decimal(conn, exercise_id):
 
 
 def test_el_1rm_estimado_del_modelo_funciona(conn, exercise_id):
-    """La prueba de que la traduccion sirve para algo."""
     set_logs.upsert(conn, una_serie(exercise_id, reps=5, peso=100.0))
 
     s = set_logs.list_for_exercise(conn, exercise_id)[0]
@@ -71,7 +68,6 @@ def test_el_1rm_estimado_del_modelo_funciona(conn, exercise_id):
 
 
 def test_una_serie_sin_peso_es_valida(conn, exercise_id):
-    """Ab wheel, dominadas... no todo lleva carga."""
     set_logs.upsert(conn, SetLog(
         id=0, exercise_id=exercise_id, set_number=1, reps=12,
         weight=None, rpe=None,
@@ -86,7 +82,6 @@ def test_una_serie_sin_peso_es_valida(conn, exercise_id):
 def test_upsert_dos_veces_actualiza_en_vez_de_duplicar(
     conn, exercise_id
 ):
-    """El caso real: el atleta se equivoco al teclear y corrige."""
     primero = set_logs.upsert(conn, una_serie(exercise_id, peso=100.0))
     segundo = set_logs.upsert(conn, una_serie(exercise_id, peso=105.0))
 
@@ -141,7 +136,6 @@ def test_list_for_workout_trae_las_de_todos_los_ejercicios(
 def test_list_for_workout_ordena_por_ejercicio_y_serie(
     conn, workout_id, definition_id, exercise_id
 ):
-    """Primero el ejercicio 1 entero, luego el 2."""
     otro = exercises.add(conn, Exercise(
         id=0, workout_id=workout_id, definition_id=definition_id,
         position=2,
@@ -171,7 +165,6 @@ def test_delete_quita_la_serie(conn, exercise_id):
 def test_history_trae_lo_del_atleta_en_ese_ejercicio(
     conn, athlete, definition_id, exercise_id
 ):
-    """El JOIN de cuatro tablas: de la serie al atleta."""
     set_logs.upsert(conn, una_serie(exercise_id, numero=1, peso=100.0))
     set_logs.upsert(conn, una_serie(exercise_id, numero=2, peso=105.0))
 
@@ -193,7 +186,6 @@ def test_history_de_otro_ejercicio_esta_vacio(
 
 
 def test_borrar_el_ejercicio_se_lleva_sus_series(conn, exercise_id):
-    """'on delete cascade': quitar el ejercicio borra sus registros."""
     set_logs.upsert(conn, una_serie(exercise_id))
 
     exercises.remove(conn, exercise_id)
@@ -207,7 +199,6 @@ def test_la_base_de_datos_rechaza_un_rpe_imposible(conn, exercise_id):
 
 
 def test_el_coach_tambien_puede_gestionar_las_series(conn, coach, athlete):
-    """Regla de negocio: el atleta registra, el coach puede corregir."""
     from models import Block, BlockStatus
     from services import access
 
@@ -224,7 +215,6 @@ def test_el_coach_tambien_puede_gestionar_las_series(conn, coach, athlete):
 
 
 def test_la_serie_guarda_quien_la_escribio(conn, exercise_id, coach):
-    """El coach la deja planificada: queda firmada por el."""
     set_logs.upsert(conn, SetLog(
         id=0, exercise_id=exercise_id, set_number=1, reps=8,
         weight=100.0, rpe=7.0, logged_by=coach,
@@ -235,7 +225,6 @@ def test_la_serie_guarda_quien_la_escribio(conn, exercise_id, coach):
 
 
 def test_al_corregirla_cambia_la_firma(conn, exercise_id, coach, athlete):
-    """Es lo que distingue 'pendiente' de 'hecha'."""
     set_logs.upsert(conn, SetLog(
         id=0, exercise_id=exercise_id, set_number=1, reps=8,
         weight=100.0, rpe=7.0, logged_by=coach,

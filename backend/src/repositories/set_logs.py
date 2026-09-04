@@ -17,7 +17,6 @@ def _a_float(valor: Optional[Decimal]) -> Optional[float]:
 
 
 def _row_to_set_log(row: dict) -> SetLog:
-    """Fila -> objeto SetLog."""
     return SetLog(
         id=row["id"],
         exercise_id=row["exercise_id"],
@@ -117,11 +116,6 @@ def set_video_required(
     set_number: int,
     requerido: bool,
 ) -> None:
-    """Marca o desmarca una serie como 'grabala'.
-
-    Endpoint aparte y no parte del upsert a proposito: asi el atleta
-    corrige sus pesos sin borrar la marca que puso el coach.
-    """
     conn.execute(
         "update set_logs set video_required = %s "
         "where exercise_id = %s and set_number = %s",

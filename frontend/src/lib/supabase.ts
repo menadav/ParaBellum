@@ -9,7 +9,6 @@ if (!url || !key) {
   );
 }
 
-/** Solo se usa para login y para renovar el token; los datos vienen de nuestra API. */
 export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true },
 });

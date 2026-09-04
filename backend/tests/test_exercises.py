@@ -1,4 +1,3 @@
-"""Tests de los ejercicios dentro de un entreno."""
 
 import psycopg
 import pytest
@@ -14,7 +13,6 @@ ID_INVENTADO = 999_999_999
 
 @pytest.fixture
 def workout_id(conn, bloque_nuevo):
-    """Un entreno vacio al que colgarle ejercicios."""
     block_id = blocks.create(conn, bloque_nuevo)
     return workouts.create(conn, Workout(
         id=0, block_id=block_id, name="Dia 1", week_number=1,
@@ -24,7 +22,6 @@ def workout_id(conn, bloque_nuevo):
 
 @pytest.fixture
 def definition_id(conn, coach):
-    """Un ejercicio del catalogo que meter en el entreno."""
     return defs.create(conn, ExerciseDefinition(
         id=0, name="Sentadilla", explanation="Profundidad completa.",
         coach_id=coach,
@@ -32,7 +29,6 @@ def definition_id(conn, coach):
 
 
 def mete(conn, workout_id, definition_id, position, notas=None):
-    """Atajo para no repetir el Exercise entero en cada test."""
     return exercises.add(conn, Exercise(
         id=0,
         workout_id=workout_id,
@@ -81,7 +77,6 @@ def test_next_position_va_despues_del_ultimo(
 def test_next_position_cuenta_solo_su_entreno(
     conn, workout_id, definition_id
 ):
-    """Dos entrenos distintos numeran sus posiciones por separado."""
     block_id = workouts.get_by_id(conn, workout_id).block_id
     otro = workouts.create(conn, Workout(
         id=0, block_id=block_id, name="Dia 2", week_number=1,
@@ -96,7 +91,6 @@ def test_next_position_cuenta_solo_su_entreno(
 def test_no_puede_haber_dos_en_la_misma_posicion(
     conn, workout_id, definition_id
 ):
-    """Lo protege el UNIQUE (workout_id, position)."""
     mete(conn, workout_id, definition_id, 1)
 
     with pytest.raises(psycopg.errors.UniqueViolation):
@@ -117,11 +111,6 @@ def test_remove_lo_saca_del_entreno(conn, workout_id, definition_id):
 def test_reorder_le_da_la_vuelta_a_la_lista(
     conn, workout_id, definition_id
 ):
-    """El caso que hace imposible el bucle ingenuo.
-
-    [A=1, B=2, C=3] -> [C, A, B]. Poner C en 1 choca con A, que sigue
-    ahi. Por eso reorder aparca primero y coloca despues.
-    """
     a = mete(conn, workout_id, definition_id, 1, "A")
     b = mete(conn, workout_id, definition_id, 2, "B")
     c = mete(conn, workout_id, definition_id, 3, "C")
@@ -136,7 +125,6 @@ def test_reorder_le_da_la_vuelta_a_la_lista(
 def test_reorder_deja_posiciones_consecutivas_desde_1(
     conn, workout_id, definition_id
 ):
-    """Aunque hubiera huecos, reorder los cierra."""
     a = mete(conn, workout_id, definition_id, 1, "A")
     b = mete(conn, workout_id, definition_id, 5, "B")
     c = mete(conn, workout_id, definition_id, 9, "C")
@@ -163,7 +151,6 @@ def test_reorder_con_lista_vacia_no_toca_nada(
 def test_borrar_el_entreno_se_lleva_sus_ejercicios(
     conn, workout_id, definition_id
 ):
-    """'on delete cascade' en workout_id: no quedan huerfanos."""
     mete(conn, workout_id, definition_id, 1)
 
     conn.execute("delete from workouts where id = %s", (workout_id,))

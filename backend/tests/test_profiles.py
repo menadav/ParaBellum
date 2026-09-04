@@ -1,4 +1,3 @@
-"""Tests del repositorio de perfiles."""
 
 import uuid
 
@@ -23,7 +22,6 @@ def test_get_by_id_inexistente_devuelve_none(conn):
 
 
 def test_get_by_email_encuentra_al_mismo(conn, coach):
-    """Buscar por id y por email tiene que dar el mismo usuario."""
     por_id = profiles.get_by_id(conn, coach)
     por_email = profiles.get_by_email(conn, por_id.email)
 
@@ -46,7 +44,6 @@ def test_list_athletes_devuelve_lista(conn, coach):
 
 
 def test_list_athletes_de_un_coach_sin_atletas_devuelve_vacio(conn):
-    """Vacio es [], nunca None: quien llama debe poder hacer un for."""
     assert profiles.list_athletes(conn, ID_INVENTADO) == []
 
 
@@ -65,7 +62,6 @@ def test_update_profile_cambia_el_nombre(conn, athlete):
 
 
 def test_update_profile_no_pisa_lo_que_no_se_manda(conn, athlete):
-    """coalesce: mandar solo el nombre deja la unidad como estaba."""
     from models import WeightUnit
 
     antes = profiles.get_by_id(conn, athlete).weight_unit

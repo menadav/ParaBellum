@@ -6,7 +6,6 @@ from typing import Optional
 
 @dataclass
 class SetPrescription:
-    """Lo que el coach manda hacer en una serie."""
 
     id: int
     exercise_id: int
@@ -18,7 +17,6 @@ class SetPrescription:
 
 @dataclass
 class SetLog:
-    """Lo que el atleta registra que ha hecho realmente."""
 
     id: int
     exercise_id: int
@@ -35,7 +33,6 @@ class SetLog:
 
     @property
     def estimated_1rm(self) -> Optional[float]:
-        """1RM estimado con la formula de Epley. None si no hubo peso."""
         if self.weight is None or self.reps < 1:
             return None
         return round(self.weight * (1 + self.reps / 30), 1)

@@ -178,7 +178,6 @@ function FilaEjercicio({
   );
 }
 
-/** El primer hueco libre: si borras la 2, la siguiente vuelve a ser la 2. */
 function siguienteNumero(series: SetLog[]): number {
   const usados = new Set(series.map((s) => s.set_number));
   let n = 1;
@@ -186,7 +185,6 @@ function siguienteNumero(series: SetLog[]): number {
   return n;
 }
 
-/** La ultima serie que hizo de este ejercicio, como referencia. */
 function UltimaVez({ exerciseId }: { exerciseId: number }) {
   const [q] = useQueries({
     queries: [
@@ -224,7 +222,6 @@ function UltimaVez({ exerciseId }: { exerciseId: number }) {
   );
 }
 
-/** Una serie registrada. Se edita pulsandola y se borra con la papelera. */
 function SerieChip({
   serie,
   exerciseId,
@@ -340,10 +337,6 @@ function SerieChip({
   );
 }
 
-/**
- * Formulario de serie. Al crear lleva contador para meter varias
- * iguales de golpe; al editar una que ya existe, no.
- */
 function FormularioSerie({
   exerciseId,
   desde,
@@ -450,7 +443,6 @@ function FormularioSerie({
   );
 }
 
-/** Serie nueva, precargada con la anterior y con contador de repetidas. */
 function NuevaSerie({
   exerciseId,
   workoutId,
@@ -543,7 +535,6 @@ function BuscadorEjercicios({
   );
 }
 
-
 function IconVideo() {
   return (
     <svg
@@ -563,7 +554,6 @@ function IconVideo() {
   );
 }
 
-/** Quita un ejercicio del entreno, con confirmacion en dos pasos. */
 function QuitarEjercicio({
   exerciseId,
   workoutId,
@@ -613,7 +603,6 @@ function QuitarEjercicio({
   );
 }
 
-/** Borra la sesion entera. El cascade se lleva ejercicios y series. */
 function BorrarSesion({
   workoutId,
   blockId,

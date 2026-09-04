@@ -1,9 +1,3 @@
-"""Tabla RPE x repeticiones -> porcentaje del 1RM.
-
-Extraida del Excel de Para Bellum. En la hoja de calculo vivia dentro
-de una formula anidada de 8.000 caracteres, repetida en cada celda.
-Aqui son unos datos y tres funciones.
-"""
 
 # {rpe: {repeticiones: fraccion del 1RM}}
 RPE_CHART: dict[float, dict[int, float]] = {
@@ -58,10 +52,6 @@ MAX_REPS = 12
 
 
 def percentage(reps: int, rpe: float) -> float:
-    """Que fraccion del 1RM representa hacer 'reps' a ese 'rpe'.
-
-    Ejemplo: 5 repeticiones a RPE 8 son el 0.811 del maximo.
-    """
     if not MIN_REPS <= reps <= MAX_REPS:
         raise ValueError(f"reps fuera de la tabla: {reps} (1..12)")
     if rpe not in RPE_CHART:
@@ -70,18 +60,8 @@ def percentage(reps: int, rpe: float) -> float:
 
 
 def estimated_1rm(weight: float, reps: int, rpe: float) -> float:
-    """1RM estimado a partir de una serie realizada.
-
-    Mucho mas fiable que la formula de Epley, porque tiene en cuenta
-    cuanto esfuerzo costo la serie (el RPE), no solo peso y reps.
-    """
     return round(weight / percentage(reps, rpe), 1)
 
 
 def weight_for(one_rm: float, reps: int, rpe: float) -> float:
-    """Que peso poner para hacer 'reps' a ese 'rpe'.
-
-    La operacion inversa, y la que usa el coach al programar:
-    "quiero 5 a RPE 8" -> el peso sale solo.
-    """
     return round(one_rm * percentage(reps, rpe), 1)

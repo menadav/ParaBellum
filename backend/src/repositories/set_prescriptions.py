@@ -11,7 +11,6 @@ _COLUMNS_SP = ", ".join(f"sp.{c}" for c in _COLUMNS.split(", "))
 
 
 def _a_float(valor: Optional[Decimal]) -> Optional[float]:
-    """numeric de Postgres -> float de Python, respetando el None."""
     return float(valor) if valor is not None else None
 
 

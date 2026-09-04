@@ -5,12 +5,6 @@ import { api } from "../../lib/api";
 import type { SetLog, User } from "../../lib/types";
 import { EmptyState, Spinner } from "../../components/UI";
 
-/**
- * Progreso por ejercicio: 1RM estimado y tonelaje a lo largo del bloque.
- *
- * Nada se calcula dos veces: el 1RM viene ya hecho desde la API, que lo
- * lee de la property del modelo SetLog.
- */
 export function EstadisticasTab() {
   const atleta = useOutletContext<User>();
   const [bloqueId, setBloqueId] = useState<number | null>(null);

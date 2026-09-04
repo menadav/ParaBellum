@@ -81,7 +81,6 @@ def delete(conn: psycopg.Connection, definition_id: int) -> None:
 def update(
     conn: psycopg.Connection, definition: ExerciseDefinition
 ) -> None:
-    """Actualiza un ejercicio del catalogo entero."""
     conn.execute(
         "update exercise_definitions set "
         "  name = %s, explanation = %s, muscle_group = %s, "

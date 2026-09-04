@@ -1,4 +1,3 @@
-"""Repositorio de la ficha del atleta."""
 
 import uuid
 from decimal import Decimal
@@ -47,7 +46,6 @@ def _row_to_profile(row: dict) -> AthleteProfile:
 def get(
     conn: psycopg.Connection, athlete_id: uuid.UUID
 ) -> Optional[AthleteProfile]:
-    """La ficha de un atleta. None si nunca se ha rellenado."""
     row = conn.execute(
         f"select {_COLUMNS} from athlete_profiles where athlete_id = %s",
         (athlete_id,),
@@ -56,11 +54,6 @@ def get(
 
 
 def upsert(conn: psycopg.Connection, perfil: AthleteProfile) -> None:
-    """Crea la ficha o la actualiza entera.
-
-    Como la ficha es un formulario que se envia completo, no hace falta
-    la actualizacion parcial: llega todo o no llega nada.
-    """
     valores = {
         "birth_date": perfil.birth_date,
         "phone": perfil.phone,

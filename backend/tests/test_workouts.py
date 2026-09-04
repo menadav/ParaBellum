@@ -1,4 +1,3 @@
-"""Tests del repositorio de entrenos."""
 
 import datetime
 
@@ -13,7 +12,6 @@ ID_INVENTADO = 999_999_999
 
 @pytest.fixture
 def block_id(conn, bloque_nuevo):
-    """Un bloque recien creado al que colgarle entrenos."""
     return blocks.create(conn, bloque_nuevo)
 
 
@@ -54,7 +52,6 @@ def test_get_by_id_inexistente_devuelve_none(conn):
 
 
 def test_create_many_los_guarda_todos(conn, block_id):
-    """Un bloque de 8 semanas x 4 dias = 32 sesiones."""
     dias = [Weekday.MONDAY, Weekday.TUESDAY,
             Weekday.THURSDAY, Weekday.FRIDAY]
     sesiones = [
@@ -91,7 +88,6 @@ def test_get_by_slot_de_un_hueco_vacio_devuelve_none(conn, block_id):
 
 
 def test_list_for_block_viene_en_orden_de_calendario(conn, block_id):
-    """Semana 1 lunes, semana 1 viernes, semana 2 lunes..."""
     workouts.create_many(conn, [
         un_workout(block_id, semana=2, dia=Weekday.MONDAY),
         un_workout(block_id, semana=1, dia=Weekday.FRIDAY),
@@ -131,7 +127,6 @@ def test_mark_completed_cambia_estado_y_fecha(conn, block_id):
 
 
 def test_no_puede_haber_dos_entrenos_en_el_mismo_hueco(conn, block_id):
-    """Lo protege el UNIQUE (block_id, week_number, day_of_week)."""
     workouts.create(
         conn, un_workout(block_id, semana=1, dia=Weekday.MONDAY)
     )

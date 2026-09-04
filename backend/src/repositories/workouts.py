@@ -124,7 +124,6 @@ def update(
     status: Optional[WorkoutStatus] = None,
     athlete_notes: Optional[str] = None,
 ) -> None:
-    """Actualiza solo lo que llega; coalesce deja el resto igual."""
     conn.execute(
         "update workouts set "
         "  name = coalesce(%s, name), "
@@ -141,5 +140,4 @@ def update(
 
 
 def delete(conn: psycopg.Connection, workout_id: int) -> None:
-    """Borra una sesion. El cascade se lleva ejercicios y series."""
     conn.execute("delete from workouts where id = %s", (workout_id,))

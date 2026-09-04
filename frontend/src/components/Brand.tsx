@@ -1,19 +1,6 @@
 import { useState } from "react";
 import "./brand.css";
 
-/**
- * Marca de Para Bellum.
- *
- * Si existen las imagenes en frontend/public se usan; si no, cae en un
- * dibujo hecho a mano para que la app nunca se quede sin logo.
- *
- *   public/wordmark.png   el "PARA BELLUM COACHING" completo
- *   public/monogram.png   la PB, cuadrada
- *
- * Guardalas con fondo TRANSPARENTE: en modo oscuro se invierten a
- * blanco, y con fondo blanco se veria un recuadro.
- */
-
 export function Wordmark({ height = 34 }: { height?: number }) {
   const [falla, setFalla] = useState(false);
   if (falla) return <WordmarkFallback height={height} />;

@@ -1,7 +1,6 @@
 import { Icon, type IconName } from "./Icon";
 import "./ui.css";
 
-/** Cabecera de tarjeta con icono, titulo y algo opcional a la derecha. */
 export function CardHead({
   icon,
   title,
@@ -89,7 +88,6 @@ export function ErrorBox({ error }: { error: unknown }) {
   );
 }
 
-/** Barra de progreso con su cifra a la derecha, como en la pantalla de inicio. */
 export function Meter({
   label,
   value,
@@ -113,7 +111,6 @@ export function Meter({
   );
 }
 
-/** Anillo de progreso del recuento de atletas. */
 export function Ring({
   value,
   total,

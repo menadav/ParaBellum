@@ -20,7 +20,6 @@ export function TopBar({ usuario }: { usuario: User }) {
   );
 }
 
-/** Tres estados: claro, oscuro y "lo que diga el sistema". */
 function ThemeToggle() {
   const { tema, efectivo, setTema } = useTheme();
 

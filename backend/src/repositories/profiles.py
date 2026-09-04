@@ -21,7 +21,6 @@ def _row_to_user(row: dict) -> User:
 def get_by_id(
     conn: psycopg.Connection, user_id: uuid.UUID
 ) -> Optional[User]:
-
     row = conn.execute(
         f"select {_COLUMNS} from profiles where id = %s",
         (user_id,),
@@ -66,7 +65,6 @@ def update_profile(
     name: Optional[str] = None,
     weight_unit: Optional[WeightUnit] = None,
 ) -> None:
-    """Actualiza solo los campos que llegan; coalesce deja el resto igual."""
     conn.execute(
         "update profiles set "
         "  name = coalesce(%s, name), "

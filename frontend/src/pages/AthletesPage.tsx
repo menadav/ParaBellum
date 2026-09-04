@@ -98,7 +98,6 @@ export function AthletesPage() {
   );
 }
 
-/** Marca los dias de la semana en que ese bloque tiene sesiones. */
 function DiasEntreno({ blockId }: { blockId?: number }) {
   const [q] = useQueries({
     queries: [

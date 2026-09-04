@@ -154,7 +154,6 @@ export function BlockPage() {
   );
 }
 
-/** Solo aparece cuando el bloque aun no tiene sesiones. */
 function GenerarSesiones({ blockId }: { blockId: number }) {
   const qc = useQueryClient();
   const [dias, setDias] = useState<Weekday[]>([0, 2, 4]);
@@ -219,8 +218,6 @@ function fechaDe(inicio: Date, semana: number, dia: number): Date {
   return d;
 }
 
-
-/** Anade un dia suelto a la semana que se este viendo. */
 function AnadirDia({
   blockId,
   semana,

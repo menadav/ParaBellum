@@ -11,7 +11,6 @@ const MESES = [
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
 ];
 
-/** Un año por semanas: cada casilla es un lunes, como los bloques. */
 export function CalendarioTab() {
   const atleta = useOutletContext<User>();
   const [ano, setAno] = useState(new Date().getFullYear());
@@ -115,7 +114,6 @@ export function CalendarioTab() {
   );
 }
 
-/** Todos los lunes del año: así se cuentan las semanas de entreno. */
 function lunesDelAno(ano: number): Date[] {
   const d = new Date(ano, 0, 1);
   while (d.getDay() !== 1) d.setDate(d.getDate() + 1);

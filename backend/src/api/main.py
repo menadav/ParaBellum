@@ -1,11 +1,3 @@
-"""La API de ParaBellum.
-
-    uvicorn api.main:app --reload --app-dir backend/src --port 8020
-    http://localhost:8020/docs
-
-Todos los endpoints menos /health exigen un token de Supabase. En /docs
-hay un boton "Authorize" arriba a la derecha para pegarlo.
-"""
 
 import os
 import uuid
@@ -100,7 +92,6 @@ def _bloque_editable(
 
 @app.get("/health", tags=["sistema"])
 def health(conn: psycopg.Connection = Depends(get_conn)) -> dict:
-    """Sin token: es lo que consulta el servidor de deploy."""
     conn.execute("select 1")
     return {"status": "ok", "database": "conectada"}
 
@@ -112,7 +103,6 @@ def health(conn: psycopg.Connection = Depends(get_conn)) -> dict:
 
 @app.get("/me", tags=["perfil"])
 def yo(usuario: User = Depends(get_current_user)) -> UserOut:
-    """El usuario del token. La primera llamada que hara la app."""
     return usuario
 
 
@@ -122,7 +112,6 @@ def actualizar_perfil(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> UserOut:
-    """Cambia el nombre visible o la unidad de peso. Solo lo tuyo."""
     profiles.update_profile(
         conn, usuario.id, name=datos.name, weight_unit=datos.weight_unit
     )
@@ -134,12 +123,6 @@ def mis_atletas(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[UserOut]:
-    """Mis atletas.
-
-    Antes esto era /coaches/{coach_id}/athletes y cualquiera podia
-    poner el uuid de otro. Ahora el uuid sale del token: no hay nada
-    que falsear, solo puedes pedir lo tuyo.
-    """
     return profiles.list_athletes(conn, coach.id)
 
 
@@ -153,7 +136,6 @@ def mis_bloques(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[BlockOut]:
-    """Mis bloques: los que entreno, o los que he creado."""
     if usuario.role.value == "coach":
         return blocks.list_for_coach(conn, usuario.id)
     return blocks.list_for_athlete(conn, usuario.id)
@@ -164,7 +146,6 @@ def mi_bloque_activo(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> BlockOut:
-    """El bloque que estoy entrenando. La pantalla de inicio."""
     bloque = blocks.get_active_for_athlete(conn, usuario.id)
     if bloque is None:
         raise HTTPException(404, "No tienes ningun bloque activo")
@@ -177,7 +158,6 @@ def bloques_de_un_atleta(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[BlockOut]:
-    """El historial de uno de mis atletas."""
     atleta = profiles.get_by_id(conn, athlete_id)
     if atleta is None or not access.es_su_atleta(coach, atleta):
         raise HTTPException(404, "Ese atleta no existe")
@@ -190,7 +170,6 @@ def obtener_bloque(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> BlockOut:
-    """Un bloque por su id."""
     return _bloque_visible(conn, block_id, usuario)
 
 
@@ -200,7 +179,6 @@ def crear_bloque(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> BlockOut:
-    """Crea un bloque en borrador para uno de mis atletas."""
     atleta = profiles.get_by_id(conn, datos.athlete_id)
     if atleta is None or not access.es_su_atleta(coach, atleta):
         raise HTTPException(403, "Ese atleta no esta a tu cargo")
@@ -279,7 +257,6 @@ def listar_ejercicios(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[ExerciseOut]:
-    """Los ejercicios de un entreno, en su orden."""
     entreno = workouts.get_by_id(conn, workout_id)
     if entreno is None:
         raise HTTPException(404, "Ese entreno no existe")
@@ -400,7 +377,6 @@ def registrar_serie(
 def _bloque_del_ejercicio(
     conn: psycopg.Connection, exercise_id: int
 ) -> int:
-    """El bloque al que pertenece un ejercicio, subiendo por la cadena."""
     fila = conn.execute(
         "select w.block_id from exercises e "
         "join workouts w on w.id = e.workout_id "
@@ -418,7 +394,6 @@ def listar_prescripciones(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[SetPrescriptionOut]:
-    """Lo prescrito en todo el entreno, de una sola consulta."""
     entreno = workouts.get_by_id(conn, workout_id)
     if entreno is None:
         raise HTTPException(404, "Ese entreno no existe")
@@ -433,10 +408,6 @@ def prescribir_series(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[SetPrescriptionOut]:
-    """El coach define las series de un ejercicio: 4x8 a RPE 7, etc.
-
-    PUT porque sustituye el bloque entero de series, no anade una.
-    """
     block_id = _bloque_del_ejercicio(conn, exercise_id)
     _bloque_editable(conn, block_id, usuario)
 
@@ -462,7 +433,6 @@ def borrar_serie(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> None:
-    """El atleta borra una serie que registro por error."""
     block_id = _bloque_del_ejercicio(conn, exercise_id)
     bloque = _bloque_visible(conn, block_id, usuario)
     if not access.puede_gestionar_series(usuario, bloque):
@@ -485,11 +455,6 @@ def historial_del_ejercicio(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[SetLogOut]:
-    """Lo que el atleta levanto las ultimas veces en este ejercicio.
-
-    Sirve de referencia al programar y al entrenar: cruza cuatro tablas
-    para ir del ejercicio de hoy a todo su historico.
-    """
     block_id = _bloque_del_ejercicio(conn, exercise_id)
     bloque = _bloque_visible(conn, block_id, usuario)
 
@@ -524,7 +489,6 @@ def ficha_del_atleta(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> AthleteProfileOut:
-    """La ficha. El propio atleta la ve sin la nota privada del coach."""
     es_el_mismo = usuario.id == athlete_id
     if not es_el_mismo:
         _atleta_a_mi_cargo(conn, athlete_id, usuario)
@@ -546,7 +510,6 @@ def guardar_ficha(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> AthleteProfileOut:
-    """Solo el coach edita la ficha de sus atletas."""
     _atleta_a_mi_cargo(conn, athlete_id, coach)
 
     athlete_profiles.upsert(conn, AthleteProfile(
@@ -565,11 +528,6 @@ def guardar_ficha(
 def _definicion_mia(
     conn: psycopg.Connection, definition_id: int, coach: User
 ) -> ExerciseDefinition:
-    """Un ejercicio del catalogo que ese coach puede tocar.
-
-    Los globales (coach_id NULL) los ve todo el mundo pero no los edita
-    nadie: son de la app, no de un coach.
-    """
     d = defs.get_by_id(conn, definition_id)
     if d is None:
         raise HTTPException(404, "Ese ejercicio no existe")
@@ -584,7 +542,6 @@ def crear_ejercicio(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> ExerciseDefinitionOut:
-    """Anade un ejercicio a tu catalogo."""
     nuevo_id = defs.create(conn, ExerciseDefinition(
         id=0,
         name=datos.name,
@@ -604,7 +561,6 @@ def editar_ejercicio(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> ExerciseDefinitionOut:
-    """Edita uno de tus ejercicios."""
     _definicion_mia(conn, definition_id, coach)
     defs.update(conn, ExerciseDefinition(
         id=definition_id,
@@ -625,7 +581,6 @@ def borrar_ejercicio(
     coach: User = Depends(require_coach),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> None:
-    """Borra un ejercicio del catalogo, si no lo usa ningun entreno."""
     _definicion_mia(conn, definition_id, coach)
     try:
         defs.delete(conn, definition_id)
@@ -650,7 +605,6 @@ def anadir_sesion(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> WorkoutOut:
-    """Anade un dia suelto a un bloque que ya existe."""
     bloque = _bloque_editable(conn, block_id, usuario)
     if datos.week_number > bloque.total_weeks:
         raise HTTPException(
@@ -677,7 +631,6 @@ def editar_sesion(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> WorkoutOut:
-    """Renombra la sesion o cambia su estado."""
     entreno = workouts.get_by_id(conn, workout_id)
     if entreno is None:
         raise HTTPException(404, "Esa sesion no existe")
@@ -699,7 +652,6 @@ def borrar_sesion(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> None:
-    """Borra la sesion con sus ejercicios y series."""
     entreno = workouts.get_by_id(conn, workout_id)
     if entreno is None:
         raise HTTPException(404, "Esa sesion no existe")
@@ -727,7 +679,6 @@ def editar_ejercicio_del_entreno(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> ExerciseOut:
-    """Notas del coach para ese ejercicio, o grupo de superserie."""
     _entreno_editable(conn, exercise_id, usuario)
     exercises.update(
         conn, exercise_id,
@@ -746,7 +697,6 @@ def quitar_ejercicio(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> None:
-    """Saca el ejercicio del entreno, con sus series."""
     _entreno_editable(conn, exercise_id, usuario)
     exercises.remove(conn, exercise_id)
 
@@ -758,7 +708,6 @@ def reordenar_ejercicios(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> list[ExerciseOut]:
-    """Recoloca los ejercicios en el orden que manda el coach."""
     entreno = workouts.get_by_id(conn, workout_id)
     if entreno is None:
         raise HTTPException(404, "Esa sesion no existe")
@@ -789,7 +738,6 @@ def marcar_para_grabar(
     usuario: User = Depends(get_current_user),
     conn: psycopg.Connection = Depends(get_conn),
 ) -> SetLogOut:
-    """El coach pide que el atleta grabe esta serie."""
     block_id = _bloque_del_ejercicio(conn, exercise_id)
     bloque = _bloque_visible(conn, block_id, usuario)
     if not access.puede_editar_bloque(usuario, bloque):

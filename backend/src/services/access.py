@@ -18,5 +18,4 @@ def puede_registrar_en_bloque(usuario: User, bloque: Block) -> bool:
 
 
 def puede_gestionar_series(usuario: User, bloque: Block) -> bool:
-    """El atleta registra lo suyo; el coach puede corregirselo."""
     return usuario.id in (bloque.athlete_id, bloque.coach_id)

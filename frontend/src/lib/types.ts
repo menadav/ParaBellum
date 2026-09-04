@@ -1,4 +1,3 @@
-/** Tipos que devuelve la API. Espejo de backend/src/api/schemas.py */
 
 export type Role = "athlete" | "coach";
 export type AthleteStatus = "pending" | "active" | "inactive";
@@ -9,7 +8,6 @@ export type WorkoutStatus =
   | "completed"
   | "skipped";
 
-/** 0 = lunes ... 6 = domingo */
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface User {
@@ -73,9 +71,7 @@ export interface SetLog {
   rpe: number | null;
   completed_at: string | null;
   estimated_1rm: number | null;
-  /** Quien la escribio. Si no es el atleta, esta pendiente. */
   logged_by: string | null;
-  /** El coach pide que grabe esta serie. */
   video_required: boolean;
 }
 

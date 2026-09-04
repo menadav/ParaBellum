@@ -94,7 +94,6 @@ class ExerciseDefinitionOut(BaseModel):
 
 
 class BlockCreate(BaseModel):
-    """Lo que hace falta para crear un bloque."""
 
     name: str = Field(min_length=1, max_length=120)
     athlete_id: uuid.UUID
@@ -105,15 +104,6 @@ class BlockCreate(BaseModel):
     @field_validator("start_date")
     @classmethod
     def tiene_que_ser_lunes(cls, v: datetime.date) -> datetime.date:
-        """La misma regla que el CHECK de la tabla, adelantada.
-
-        La base de datos ya lo impide, asi que esto no es imprescindible.
-        Pero sin esto el usuario recibiria un 500 feo de Postgres; con
-        esto recibe un 422 que le dice exactamente que pasa.
-
-        Que la regla este en los dos sitios no es duplicar por duplicar:
-        la tabla GARANTIZA, la API EXPLICA.
-        """
         if v.weekday() != 0:
             dias = ["lunes", "martes", "miercoles", "jueves",
                     "viernes", "sabado", "domingo"]
@@ -124,17 +114,12 @@ class BlockCreate(BaseModel):
 
 
 class WorkoutsGenerate(BaseModel):
-    """Los dias de la semana en que se entrena, y como se llaman."""
 
     days: list[Weekday] = Field(min_length=1, max_length=7)
     names: list[str] | None = None
 
 
 class ExerciseCreate(BaseModel):
-    """Un ejercicio del catalogo, metido en un entreno.
-
-    position es opcional: si no viene, va al final.
-    """
 
     definition_id: int
     position: int | None = None
@@ -143,7 +128,6 @@ class ExerciseCreate(BaseModel):
 
 
 class SetLogCreate(BaseModel):
-    """Una serie que el atleta acaba de hacer."""
 
     set_number: int = Field(ge=1)
     reps: int = Field(ge=0)
@@ -157,14 +141,12 @@ class StatusUpdate(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
-    """Lo que un usuario puede cambiar de su propio perfil."""
 
     name: str | None = Field(default=None, min_length=1, max_length=80)
     weight_unit: WeightUnit | None = None
 
 
 class SetPrescriptionOut(BaseModel):
-    """Lo que el coach manda hacer en una serie."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -177,7 +159,6 @@ class SetPrescriptionOut(BaseModel):
 
 
 class PrescriptionIn(BaseModel):
-    """Una serie prescrita, tal como llega del formulario del coach."""
 
     set_number: int = Field(ge=1)
     target_reps: int = Field(ge=1)
@@ -186,13 +167,11 @@ class PrescriptionIn(BaseModel):
 
 
 class PrescriptionsReplace(BaseModel):
-    """El bloque entero de series de un ejercicio."""
 
     sets: list[PrescriptionIn] = Field(max_length=20)
 
 
 class AthleteProfileOut(BaseModel):
-    """La ficha del atleta. coach_note solo se envia al coach."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -218,7 +197,6 @@ class AthleteProfileOut(BaseModel):
 
 
 class AthleteProfileIn(BaseModel):
-    """El formulario de la ficha, que se envia entero."""
 
     birth_date: datetime.date | None = None
     phone: str | None = Field(default=None, max_length=40)
@@ -243,7 +221,6 @@ class VideoRequired(BaseModel):
 
 
 class DefinitionIn(BaseModel):
-    """Un ejercicio del catalogo, creado o editado por el coach."""
 
     name: str = Field(min_length=1, max_length=120)
     explanation: str = Field(default="", max_length=2000)
@@ -253,7 +230,6 @@ class DefinitionIn(BaseModel):
 
 
 class WorkoutIn(BaseModel):
-    """Una sesion suelta anadida a un bloque."""
 
     name: str = Field(min_length=1, max_length=120)
     week_number: int = Field(ge=1)
@@ -272,6 +248,5 @@ class ExerciseUpdate(BaseModel):
 
 
 class ReorderIn(BaseModel):
-    """Los ids en el orden que quiere el coach."""
 
     exercise_ids: list[int] = Field(min_length=1, max_length=50)

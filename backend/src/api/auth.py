@@ -22,7 +22,6 @@ bearer = HTTPBearer(description="El access_token que da Supabase")
 
 
 def _no_autorizado(motivo: str) -> HTTPException:
-    """401: no se quien eres, o tu token no vale."""
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=motivo,

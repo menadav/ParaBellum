@@ -18,7 +18,6 @@ import type {
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8030";
 
-/** Error de la API con su codigo HTTP, para poder distinguir 403 de 404. */
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -48,7 +47,6 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return res.status === 204 ? (undefined as T) : res.json();
 }
 
-/** FastAPI devuelve el detalle como texto (HTTPException) o como lista (validacion). */
 function mensajeDeError(cuerpo: unknown, status: number): string {
   const detalle = (cuerpo as { detail?: unknown })?.detail;
   if (typeof detalle === "string") return detalle;

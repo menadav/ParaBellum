@@ -15,7 +15,6 @@ class WorkoutStatus(str, enum.Enum):
 
 @dataclass
 class Workout:
-    """Sesion dentro de un bloque. NO guarda fecha: se deriva de Block.date_for()."""
 
     id: int
     block_id: int

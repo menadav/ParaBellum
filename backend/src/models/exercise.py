@@ -5,7 +5,6 @@ from typing import Optional
 
 @dataclass
 class ExerciseDefinition:
-    """Ejercicio del catalogo, reutilizable entre entrenos y atletas."""
 
     id: int
     name: str
@@ -18,7 +17,6 @@ class ExerciseDefinition:
 
 @dataclass
 class Exercise:
-    """Instancia del catalogo dentro de un entreno concreto."""
 
     id: int
     workout_id: int

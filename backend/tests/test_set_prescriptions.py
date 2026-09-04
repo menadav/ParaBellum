@@ -1,4 +1,3 @@
-"""Tests de las series prescritas."""
 
 import psycopg
 import pytest
@@ -63,7 +62,6 @@ def test_los_pesos_llegan_como_float(conn, exercise_id):
 
 
 def test_replace_sustituye_lo_anterior(conn, exercise_id):
-    """4x8 pasa a ser 3x10: no quedan restos de la prescripcion vieja."""
     set_prescriptions.replace_for_exercise(conn, exercise_id, [
         serie(exercise_id, n) for n in (1, 2, 3, 4)
     ])
@@ -88,7 +86,6 @@ def test_replace_con_lista_vacia_las_borra_todas(conn, exercise_id):
 
 
 def test_una_serie_puede_no_llevar_peso(conn, exercise_id):
-    """El coach manda 'AMRAP a RPE 9' sin decir carga."""
     set_prescriptions.replace_for_exercise(conn, exercise_id, [
         SetPrescription(
             id=0, exercise_id=exercise_id, set_number=1,
@@ -127,7 +124,6 @@ def test_list_for_workout_trae_las_de_todos_los_ejercicios(
 def test_no_puede_haber_dos_series_con_el_mismo_numero(
     conn, exercise_id
 ):
-    """Lo protege el UNIQUE (exercise_id, set_number)."""
     with pytest.raises(psycopg.errors.UniqueViolation):
         set_prescriptions.replace_for_exercise(conn, exercise_id, [
             serie(exercise_id, 1), serie(exercise_id, 1),

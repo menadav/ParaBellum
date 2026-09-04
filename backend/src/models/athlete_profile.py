@@ -13,10 +13,6 @@ class Gender(str, enum.Enum):
 
 @dataclass
 class AthleteProfile:
-    """Ficha del atleta: lo que el coach recoge al darlo de alta.
-
-    coach_note es privada: el atleta no la ve nunca.
-    """
 
     athlete_id: uuid.UUID
     birth_date: Optional[datetime.date] = None
@@ -38,7 +34,6 @@ class AthleteProfile:
 
     @property
     def age(self) -> Optional[int]:
-        """Edad en anos cumplidos."""
         if self.birth_date is None:
             return None
         hoy = datetime.date.today()
@@ -49,6 +44,5 @@ class AthleteProfile:
 
     @property
     def total(self) -> Optional[float]:
-        """Suma de las tres marcas. None si falta alguna."""
         marcas = (self.best_squat, self.best_bench, self.best_deadlift)
         return round(sum(marcas), 1) if all(m is not None for m in marcas) else None

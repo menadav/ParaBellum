@@ -1,4 +1,3 @@
-/** Iconos de linea, dibujados a mano para no depender de ninguna libreria. */
 
 const PATHS = {
   home: "M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5",
@@ -49,7 +48,6 @@ export function Icon({
   );
 }
 
-/** Marca de Para Bellum: dos barras inclinadas, como discos en una barra. */
 export function Logo({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">

@@ -22,12 +22,6 @@ class WeightUnit(str, enum.Enum):
 
 @dataclass
 class User:
-    """Coach y atleta comparten tabla: un atleta apunta a su coach.
-
-    Vive en la tabla 'profiles'. El id es el mismo uuid que Supabase Auth
-    da al usuario en auth.users, y la contrasena no esta aqui: la guarda
-    Supabase, nosotros no la vemos nunca.
-    """
 
     id: uuid.UUID
     name: str

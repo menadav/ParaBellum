@@ -32,10 +32,6 @@ def transaction() -> Iterator[psycopg.Connection]:
 
 
 def ping() -> dict:
-    """Comprueba que la conexion funciona de verdad.
-
-    Devuelve la version de Postgres y cuantas tablas tenemos creadas.
-    """
     with transaction() as conn:
         version = conn.execute("select version()").fetchone()["version"]
         tablas = conn.execute(

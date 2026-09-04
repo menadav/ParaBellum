@@ -1,4 +1,3 @@
-"""Tests de la ficha del atleta."""
 
 import datetime
 
@@ -56,7 +55,6 @@ def test_los_numeros_llegan_como_float(conn, athlete):
 
 
 def test_la_edad_se_calcula_sola(conn, athlete):
-    """No se guarda: cambiaria de valor cada cumpleanos."""
     athlete_profiles.upsert(conn, una_ficha(athlete))
 
     f = athlete_profiles.get(conn, athlete)
@@ -77,12 +75,6 @@ def test_sin_las_tres_marcas_no_hay_total(conn, athlete):
 
 
 def test_no_se_puede_borrar_un_atleta_con_bloques(conn, athlete):
-    """Protege el historico: blocks.athlete_id no tiene cascade.
-
-    Borrar a un atleta que ha entrenado dejaria bloques huerfanos, asi
-    que Postgres lo impide. Para dar de baja se usa status='inactive',
-    que conserva todo lo que hizo.
-    """
     import psycopg
     import pytest
 

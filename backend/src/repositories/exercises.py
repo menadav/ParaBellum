@@ -14,7 +14,6 @@ _OFFSET = 1000
 
 
 def _row_to_exercise(row: dict) -> Exercise:
-    """Fila -> objeto. Sin enums, como el del catalogo."""
     return Exercise(
         id=row["id"],
         workout_id=row["workout_id"],
@@ -95,7 +94,6 @@ def update(
     notes: Optional[str] = None,
     superset_group: Optional[str] = None,
 ) -> None:
-    """Cambia las notas del coach o el grupo de superserie."""
     conn.execute(
         "update exercises set "
         "  notes = coalesce(%s::text, notes), "

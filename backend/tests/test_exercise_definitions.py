@@ -1,4 +1,3 @@
-"""Tests del catalogo de ejercicios."""
 
 import uuid
 
@@ -47,7 +46,6 @@ def test_get_by_id_inexistente_devuelve_none(conn):
 
 
 def test_un_ejercicio_global_no_tiene_coach(conn):
-    """coach_id = NULL significa 'del catalogo global'."""
     nuevo = defs.create(conn, una_definicion(nombre="Press banca"))
 
     assert defs.get_by_id(conn, nuevo).coach_id is None
@@ -70,7 +68,6 @@ def test_search_encuentra_los_globales(conn, coach):
 
 
 def test_search_no_encuentra_los_de_otro_coach(conn, coach):
-    """El aislamiento entre coaches. Si esto falla, hay una fuga."""
     otro_coach = uuid.UUID("11111111-1111-1111-1111-111111111111")
     defs.create(conn, una_definicion(
         nombre="Ejercicio secreto", coach_id=coach
@@ -82,7 +79,6 @@ def test_search_no_encuentra_los_de_otro_coach(conn, coach):
 
 
 def test_search_no_distingue_mayusculas(conn, coach):
-    """Por eso es ILIKE y no LIKE."""
     defs.create(conn, una_definicion(nombre="Zancadas", coach_id=coach))
 
     assert defs.search(conn, coach, "ZANCADAS")
@@ -131,12 +127,6 @@ def test_delete_lo_quita_del_catalogo(conn, coach):
 def test_no_se_puede_borrar_un_ejercicio_en_uso(
     conn, coach, bloque_nuevo
 ):
-    """La clave foranea protege el historico.
-
-    Borrar "Sentadilla" no puede dejar huerfanos los entrenos que la
-    usaban. Como exercises.definition_id no tiene 'on delete cascade',
-    Postgres se niega.
-    """
     from models import Weekday, Workout, WorkoutStatus
     from repositories import blocks, workouts
 
