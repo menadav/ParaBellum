@@ -287,3 +287,9 @@ class InvitationPublic(BaseModel):
     usable: bool
     expired: bool
     accepted: bool
+
+
+class BlockStats(BaseModel):
+    workouts: int
+    exercises: int
+    logs: int

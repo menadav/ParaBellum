@@ -7,6 +7,7 @@ import { Icon } from "../components/Icon";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
 import { WorkoutCard } from "./WorkoutCard";
+import { BloqueAjustes } from "./BloqueAjustes";
 import "./block.css";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -17,6 +18,7 @@ export function BlockPage() {
   const [semana, setSemana] = useState(1);
   const usuario = useOutletContext<User>();
   const esCoach = usuario.role === "coach";
+  const [ajustes, setAjustes] = useState(false);
   const qc = useQueryClient();
 
   const bloqueQ = useQuery({
@@ -65,6 +67,12 @@ export function BlockPage() {
 
         {esCoach && (
           <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+            <button
+              className="btn ghost"
+              onClick={() => setAjustes((v) => !v)}
+            >
+              Editar
+            </button>
             {bloque.status !== "active" && (
               <button
                 className="btn"
@@ -98,6 +106,10 @@ export function BlockPage() {
       </div>
 
       {cambiarEstado.error && <ErrorBox error={cambiarEstado.error} />}
+
+      {ajustes && (
+        <BloqueAjustes bloque={bloque} onCerrar={() => setAjustes(false)} />
+      )}
 
       <nav className="semanas" aria-label="Semanas del bloque">
         {Array.from({ length: bloque.total_weeks }, (_, i) => i + 1).map(

@@ -167,3 +167,56 @@ def test_count_from_week_cuenta_las_sesiones_que_sobrarian(
     assert workouts.count_from_week(conn, nuevo_id, 6) == 3
     assert workouts.count_from_week(conn, nuevo_id, 9) == 0
     assert workouts.max_week(conn, nuevo_id) == 8
+
+
+def test_stats_cuenta_lo_que_se_perderia(conn, bloque_nuevo, coach):
+    from models import (
+        Exercise, ExerciseDefinition, SetLog, Weekday, Workout,
+        WorkoutStatus,
+    )
+    from repositories import exercises, set_logs, workouts
+    from repositories import exercise_definitions as defs
+
+    block_id = blocks.create(conn, bloque_nuevo)
+    w = workouts.create(conn, Workout(
+        id=0, block_id=block_id, name="Dia 1", week_number=1,
+        day_of_week=Weekday.MONDAY, status=WorkoutStatus.PLANNED,
+    ))
+    d = defs.create(conn, ExerciseDefinition(
+        id=0, name="Sentadilla", explanation="x", coach_id=coach,
+    ))
+    e = exercises.add(conn, Exercise(
+        id=0, workout_id=w, definition_id=d, position=1,
+    ))
+    set_logs.upsert(conn, SetLog(
+        id=0, exercise_id=e, set_number=1, reps=8, weight=100.0,
+    ))
+
+    s = blocks.stats(conn, block_id)
+    assert s["workouts"] == 1
+    assert s["exercises"] == 1
+    assert s["logs"] == 1
+
+
+def test_delete_se_lleva_todo_por_delante(conn, bloque_nuevo, coach):
+    from models import Weekday, Workout, WorkoutStatus
+    from repositories import workouts
+
+    block_id = blocks.create(conn, bloque_nuevo)
+    w = workouts.create(conn, Workout(
+        id=0, block_id=block_id, name="Dia 1", week_number=1,
+        day_of_week=Weekday.MONDAY, status=WorkoutStatus.PLANNED,
+    ))
+
+    blocks.delete(conn, block_id)
+
+    assert blocks.get_by_id(conn, block_id) is None
+    assert workouts.get_by_id(conn, w) is None
+
+
+def test_stats_de_un_bloque_vacio_cuenta_ceros(conn, bloque_nuevo):
+    block_id = blocks.create(conn, bloque_nuevo)
+
+    s = blocks.stats(conn, block_id)
+
+    assert (s["workouts"], s["exercises"], s["logs"]) == (0, 0, 0)

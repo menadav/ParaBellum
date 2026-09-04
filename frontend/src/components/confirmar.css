@@ -1,0 +1,106 @@
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+  animation: aparecer 0.12s ease;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 440px;
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  animation: subir 0.14s ease;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; }
+}
+
+@keyframes subir {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-fondo,
+  .modal {
+    animation: none;
+  }
+}
+
+.modal-icono {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--danger);
+}
+
+.modal h2 {
+  font-size: 1.1rem;
+}
+
+.modal-texto {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.modal-texto ul {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-texto li {
+  display: flex;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.modal-texto li b {
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.btn.peligro {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn.peligro:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Zona de acciones que no se pueden deshacer */
+.zona-peligro {
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+}
+
+.zona-peligro h2 {
+  color: var(--danger);
+}

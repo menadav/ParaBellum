@@ -111,3 +111,26 @@ def update(
         "where id = %s",
         (name, total_weeks, notes, block_id),
     )
+
+
+def delete(conn: psycopg.Connection, block_id: int) -> None:
+    # El cascade se lleva sesiones, ejercicios y series registradas.
+    conn.execute("delete from blocks where id = %s", (block_id,))
+
+
+def stats(conn: psycopg.Connection, block_id: int) -> dict:
+    # Lo que se perderia al borrarlo, para poder avisar de verdad.
+    return conn.execute(
+        "select "
+        "  (select count(*) from workouts w where w.block_id = b.id) "
+        "    as workouts, "
+        "  (select count(*) from exercises e join workouts w "
+        "     on w.id = e.workout_id where w.block_id = b.id) "
+        "    as exercises, "
+        "  (select count(*) from set_logs sl join exercises e "
+        "     on e.id = sl.exercise_id join workouts w "
+        "     on w.id = e.workout_id where w.block_id = b.id) "
+        "    as logs "
+        "from blocks b where b.id = %s",
+        (block_id,),
+    ).fetchone()

@@ -153,3 +153,9 @@ export interface Invitation {
   expired: boolean;
   usable: boolean;
 }
+
+export interface BlockStats {
+  workouts: number;
+  exercises: number;
+  logs: number;
+}

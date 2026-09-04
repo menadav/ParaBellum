@@ -3,6 +3,7 @@ import type {
   AthleteProfile,
   AthleteProfileIn,
   Block,
+  BlockStats,
   DefinitionIn,
   Invitation,
   BlockCreate,
@@ -87,6 +88,8 @@ export const api = {
     id: number,
     body: { name?: string; total_weeks?: number; notes?: string }
   ) => patch<Block>(`/blocks/${id}`, body),
+  blockStats: (id: number) => get<BlockStats>(`/blocks/${id}/stats`),
+  deleteBlock: (id: number) => del(`/blocks/${id}`),
   setBlockStatus: (id: number, status: Block["status"]) =>
     patch<Block>(`/blocks/${id}/status`, { status }),
 

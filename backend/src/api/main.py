@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
-    AthleteProfileIn, AthleteProfileOut, BlockUpdate, DefinitionIn,
+    AthleteProfileIn, AthleteProfileOut, BlockStats, BlockUpdate,
+    DefinitionIn,
     InvitationIn, InvitationOut, InvitationPublic,
     ExerciseUpdate,
     ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
@@ -879,3 +880,25 @@ def revocar_invitacion(
     if invitation_id not in mias:
         raise HTTPException(404, "Esa invitacion no existe")
     invitations.delete(conn, invitation_id)
+
+
+@app.get("/blocks/{block_id}/stats", tags=["bloques"])
+def resumen_del_bloque(
+    block_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> BlockStats:
+    _bloque_visible(conn, block_id, usuario)
+    return blocks.stats(conn, block_id)
+
+
+@app.delete("/blocks/{block_id}", status_code=204, tags=["bloques"])
+def borrar_bloque(
+    block_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    # Se lleva por delante sesiones, ejercicios y series registradas.
+    # El aviso lo da la interfaz; aqui solo se comprueba que es tuyo.
+    _bloque_editable(conn, block_id, usuario)
+    blocks.delete(conn, block_id)
