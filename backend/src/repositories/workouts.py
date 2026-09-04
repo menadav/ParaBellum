@@ -141,3 +141,24 @@ def update(
 
 def delete(conn: psycopg.Connection, workout_id: int) -> None:
     conn.execute("delete from workouts where id = %s", (workout_id,))
+
+
+def max_week(conn: psycopg.Connection, block_id: int) -> int:
+    # 0 si el bloque no tiene ninguna sesion todavia.
+    row = conn.execute(
+        "select coalesce(max(week_number), 0) as ultima "
+        "from workouts where block_id = %s",
+        (block_id,),
+    ).fetchone()
+    return row["ultima"]
+
+
+def count_from_week(
+    conn: psycopg.Connection, block_id: int, desde: int
+) -> int:
+    row = conn.execute(
+        "select count(*) as n from workouts "
+        "where block_id = %s and week_number >= %s",
+        (block_id, desde),
+    ).fetchone()
+    return row["n"]

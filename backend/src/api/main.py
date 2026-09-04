@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
-    AthleteProfileIn, AthleteProfileOut, DefinitionIn, ExerciseUpdate,
+    AthleteProfileIn, AthleteProfileOut, BlockUpdate, DefinitionIn,
+    ExerciseUpdate,
     ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
     ExerciseOut, PrescriptionsReplace, ProfileUpdate, SetLogCreate,
@@ -756,3 +757,34 @@ def marcar_para_grabar(
     if serie is None:
         raise HTTPException(404, "Esa serie no existe")
     return serie
+
+
+@app.patch("/blocks/{block_id}", tags=["bloques"])
+def editar_bloque(
+    block_id: int,
+    datos: BlockUpdate,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> BlockOut:
+    # Acortar un bloque no puede tirar sesiones a la basura sin avisar:
+    # si sobran, se dice cuantas y se deja que el coach decida.
+    _bloque_editable(conn, block_id, usuario)
+
+    if datos.total_weeks is not None:
+        sobran = workouts.count_from_week(
+            conn, block_id, datos.total_weeks + 1
+        )
+        if sobran:
+            raise HTTPException(
+                409,
+                f"Quedarian {sobran} sesion(es) fuera del bloque. "
+                f"Borralas antes de reducirlo a {datos.total_weeks} semanas.",
+            )
+
+    blocks.update(
+        conn, block_id,
+        name=datos.name,
+        total_weeks=datos.total_weeks,
+        notes=datos.notes,
+    )
+    return blocks.get_by_id(conn, block_id)

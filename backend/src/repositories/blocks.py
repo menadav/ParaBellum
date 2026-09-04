@@ -94,3 +94,20 @@ def update_status(
         "update blocks set status = %s where id = %s",
         (status.value, block_id),
     )
+
+
+def update(
+    conn: psycopg.Connection,
+    block_id: int,
+    name: Optional[str] = None,
+    total_weeks: Optional[int] = None,
+    notes: Optional[str] = None,
+) -> None:
+    conn.execute(
+        "update blocks set "
+        "  name = coalesce(%s, name), "
+        "  total_weeks = coalesce(%s, total_weeks), "
+        "  notes = coalesce(%s::text, notes) "
+        "where id = %s",
+        (name, total_weeks, notes, block_id),
+    )

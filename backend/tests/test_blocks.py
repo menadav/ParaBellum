@@ -126,3 +126,44 @@ def test_no_se_pueden_tener_dos_bloques_activos(
 
     with pytest.raises(psycopg.errors.UniqueViolation):
         blocks.update_status(conn, segundo, BlockStatus.ACTIVE)
+
+
+def test_update_cambia_las_semanas(conn, bloque_nuevo):
+    nuevo_id = blocks.create(conn, bloque_nuevo)
+
+    blocks.update(conn, nuevo_id, total_weeks=12)
+
+    b = blocks.get_by_id(conn, nuevo_id)
+    assert b.total_weeks == 12
+    # end_date es una property: se recalcula sola.
+    assert b.end_date == b.start_date + datetime.timedelta(days=83)
+
+
+def test_update_no_pisa_lo_que_no_se_manda(conn, bloque_nuevo):
+    nuevo_id = blocks.create(conn, bloque_nuevo)
+
+    blocks.update(conn, nuevo_id, total_weeks=10)
+
+    b = blocks.get_by_id(conn, nuevo_id)
+    assert b.name == bloque_nuevo.name
+    assert b.total_weeks == 10
+
+
+def test_count_from_week_cuenta_las_sesiones_que_sobrarian(
+    conn, bloque_nuevo
+):
+    from models import Weekday, Workout, WorkoutStatus
+    from repositories import workouts
+
+    nuevo_id = blocks.create(conn, bloque_nuevo)
+    workouts.create_many(conn, [
+        Workout(
+            id=0, block_id=nuevo_id, name=f"S{s}", week_number=s,
+            day_of_week=Weekday.MONDAY, status=WorkoutStatus.PLANNED,
+        )
+        for s in (1, 2, 6, 7, 8)
+    ])
+
+    assert workouts.count_from_week(conn, nuevo_id, 6) == 3
+    assert workouts.count_from_week(conn, nuevo_id, 9) == 0
+    assert workouts.max_week(conn, nuevo_id) == 8

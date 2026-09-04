@@ -250,3 +250,9 @@ class ExerciseUpdate(BaseModel):
 class ReorderIn(BaseModel):
 
     exercise_ids: list[int] = Field(min_length=1, max_length=50)
+
+
+class BlockUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    total_weeks: int | None = Field(default=None, ge=1, le=52)
+    notes: str | None = None

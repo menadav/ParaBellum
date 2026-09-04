@@ -107,6 +107,14 @@ export function BlockPage() {
             </button>
           )
         )}
+        {esCoach && bloque.status !== "completed" && (
+          <SemanasDelBloque
+            bloque={bloque}
+            onQuitada={() =>
+              setSemana((s) => Math.min(s, bloque.total_weeks - 1) || 1)
+            }
+          />
+        )}
       </nav>
 
       {entrenos.length > 0 && (
@@ -318,5 +326,55 @@ function AnadirDia({
         </div>
       </form>
     </section>
+  );
+}
+
+
+function SemanasDelBloque({
+  bloque,
+  onQuitada,
+}: {
+  bloque: Block;
+  onQuitada: () => void;
+}) {
+  const qc = useQueryClient();
+
+  const cambiar = useMutation({
+    mutationFn: (total: number) =>
+      api.updateBlock(bloque.id, { total_weeks: total }),
+    onSuccess: (_d, total) => {
+      qc.invalidateQueries({ queryKey: ["bloque", bloque.id] });
+      qc.invalidateQueries({ queryKey: ["misBloques"] });
+      qc.invalidateQueries({ queryKey: ["bloquesAtleta"] });
+      if (total < bloque.total_weeks) onQuitada();
+    },
+  });
+
+  return (
+    <span className="semanas-control">
+      <button
+        className="semana ajuste"
+        onClick={() => cambiar.mutate(bloque.total_weeks - 1)}
+        disabled={bloque.total_weeks <= 1 || cambiar.isPending}
+        title="Quitar la última semana"
+        aria-label="Quitar la última semana"
+      >
+        −
+      </button>
+      <button
+        className="semana ajuste"
+        onClick={() => cambiar.mutate(bloque.total_weeks + 1)}
+        disabled={bloque.total_weeks >= 52 || cambiar.isPending}
+        title="Añadir una semana"
+        aria-label="Añadir una semana"
+      >
+        +
+      </button>
+      {cambiar.isError && (
+        <span className="semanas-error">
+          {(cambiar.error as Error).message}
+        </span>
+      )}
+    </span>
   );
 }

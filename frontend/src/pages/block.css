@@ -491,3 +491,43 @@
     opacity: 0.6;
   }
 }
+
+
+/* ---------- Anadir y quitar semanas ---------- */
+
+.semanas {
+  align-items: center;
+}
+
+.semanas-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: var(--sp-3);
+  padding-left: var(--sp-3);
+  border-left: 1px solid var(--line);
+}
+
+.semana.ajuste {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-style: dashed;
+}
+
+.semana.ajuste:hover:not(:disabled) {
+  color: var(--ink);
+  border-style: solid;
+}
+
+.semana.ajuste:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.semanas-error {
+  flex-basis: 100%;
+  margin-top: var(--sp-2);
+  font-size: 0.8rem;
+  color: var(--danger);
+}

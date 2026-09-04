@@ -82,6 +82,10 @@ export const api = {
     get<Block[]>(`/athletes/${athleteId}/blocks`),
   block: (id: number) => get<Block>(`/blocks/${id}`),
   createBlock: (body: BlockCreate) => post<Block>("/blocks", body),
+  updateBlock: (
+    id: number,
+    body: { name?: string; total_weeks?: number; notes?: string }
+  ) => patch<Block>(`/blocks/${id}`, body),
   setBlockStatus: (id: number, status: Block["status"]) =>
     patch<Block>(`/blocks/${id}/status`, { status }),
 
