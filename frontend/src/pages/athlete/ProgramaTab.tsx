@@ -1,42 +1,37 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
-import { Icon } from "../components/Icon";
+import { api } from "../../lib/api";
+import type { User } from "../../lib/types";
+import { Icon } from "../../components/Icon";
 import {
   EmptyState,
   ErrorBox,
   Spinner,
   StatusPill,
-} from "../components/UI";
-import { formatoCorto } from "./HomePage";
-import "./block.css";
+} from "../../components/UI";
+import { formatoCorto } from "../HomePage";
 
-export function AthleteDetailPage() {
-  const { athleteId = "" } = useParams();
+export function ProgramaTab() {
+  const atleta = useOutletContext<User>();
   const [creando, setCreando] = useState(false);
 
-  const atletasQ = useQuery({ queryKey: ["atletas"], queryFn: api.athletes });
-  const bloquesQ = useQuery({
-    queryKey: ["bloquesAtleta", athleteId],
-    queryFn: () => api.athleteBlocks(athleteId),
+  const {
+    data: bloques = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["bloquesAtleta", atleta.id],
+    queryFn: () => api.athleteBlocks(atleta.id),
   });
 
-  const atleta = atletasQ.data?.find((a) => a.id === athleteId);
-
-  if (bloquesQ.isLoading) return <Spinner label="Cargando…" />;
-  if (bloquesQ.error) return <ErrorBox error={bloquesQ.error} />;
-
-  const bloques = bloquesQ.data ?? [];
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorBox error={error} />;
 
   return (
-    <div className="page">
-      <div className="page-head">
-        <div className="page-title">
-          <h1>{atleta?.name ?? "Atleta"}</h1>
-          <p>{atleta?.email}</p>
-        </div>
-        <button className="btn" onClick={() => setCreando(true)}>
+    <div className="stack" style={{ gap: "var(--sp-5)" }}>
+      <div className="row" style={{ justifyContent: "flex-end" }}>
+        <button className="btn" onClick={() => setCreando((v) => !v)}>
           <Icon name="plus" size={16} />
           Nuevo bloque
         </button>
@@ -44,7 +39,7 @@ export function AthleteDetailPage() {
 
       {creando && (
         <NuevoBloque
-          athleteId={athleteId}
+          athleteId={atleta.id}
           onCerrar={() => setCreando(false)}
         />
       )}
@@ -92,7 +87,6 @@ export function AthleteDetailPage() {
   );
 }
 
-/** Formulario de bloque nuevo. La fecha se fuerza al lunes, como exige la API. */
 function NuevoBloque({
   athleteId,
   onCerrar,
@@ -143,7 +137,6 @@ function NuevoBloque({
               autoFocus
             />
           </label>
-
           <label className="field">
             <span className="label">Semanas</span>
             <input
@@ -155,7 +148,6 @@ function NuevoBloque({
               onChange={(e) => setSemanas(Number(e.target.value))}
             />
           </label>
-
           <label className="field">
             <span className="label">Empieza (lunes)</span>
             <input
@@ -173,7 +165,6 @@ function NuevoBloque({
             Los bloques empiezan en lunes.
           </p>
         )}
-
         {crear.error && <ErrorBox error={crear.error} />}
 
         <div>

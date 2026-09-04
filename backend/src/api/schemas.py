@@ -2,7 +2,8 @@ import datetime
 import uuid
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from models import (
-    AthleteStatus, BlockStatus, Role, Weekday, WeightUnit, WorkoutStatus,
+    AthleteStatus, BlockStatus, Gender, Role, Weekday, WeightUnit,
+    WorkoutStatus,
 )
 
 
@@ -187,3 +188,50 @@ class PrescriptionsReplace(BaseModel):
     """El bloque entero de series de un ejercicio."""
 
     sets: list[PrescriptionIn] = Field(max_length=20)
+
+
+class AthleteProfileOut(BaseModel):
+    """La ficha del atleta. coach_note solo se envia al coach."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    athlete_id: uuid.UUID
+    birth_date: datetime.date | None
+    age: int | None
+    phone: str | None
+    city: str | None
+    gender: Gender | None
+    height_cm: float | None
+    occupation: str | None
+    training_since: str | None
+    sports: str | None
+    injuries: str | None
+    nutrition: str | None
+    goals: str | None
+    priorities: str | None
+    best_squat: float | None
+    best_bench: float | None
+    best_deadlift: float | None
+    total: float | None
+    coach_note: str | None = None
+
+
+class AthleteProfileIn(BaseModel):
+    """El formulario de la ficha, que se envia entero."""
+
+    birth_date: datetime.date | None = None
+    phone: str | None = Field(default=None, max_length=40)
+    city: str | None = Field(default=None, max_length=120)
+    gender: Gender | None = None
+    height_cm: float | None = Field(default=None, ge=100, le=250)
+    occupation: str | None = None
+    training_since: str | None = None
+    sports: str | None = None
+    injuries: str | None = None
+    nutrition: str | None = None
+    goals: str | None = None
+    priorities: str | None = None
+    best_squat: float | None = Field(default=None, gt=0)
+    best_bench: float | None = Field(default=None, gt=0)
+    best_deadlift: float | None = Field(default=None, gt=0)
+    coach_note: str | None = None

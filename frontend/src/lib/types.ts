@@ -105,3 +105,32 @@ export interface PrescriptionIn {
   target_weight?: number | null;
   target_rpe?: number | null;
 }
+
+export type Gender = "female" | "male" | "other";
+
+export interface AthleteProfile {
+  athlete_id: string;
+  birth_date: string | null;
+  age: number | null;
+  phone: string | null;
+  city: string | null;
+  gender: Gender | null;
+  height_cm: number | null;
+  occupation: string | null;
+  training_since: string | null;
+  sports: string | null;
+  injuries: string | null;
+  nutrition: string | null;
+  goals: string | null;
+  priorities: string | null;
+  best_squat: number | null;
+  best_bench: number | null;
+  best_deadlift: number | null;
+  total: number | null;
+  coach_note: string | null;
+}
+
+export type AthleteProfileIn = Omit<
+  AthleteProfile,
+  "athlete_id" | "age" | "total"
+>;

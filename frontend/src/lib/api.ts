@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 import type {
+  AthleteProfile,
+  AthleteProfileIn,
   Block,
   BlockCreate,
   Exercise,
@@ -69,6 +71,10 @@ export const api = {
   updateMe: (body: { name?: string; weight_unit?: "kg" | "lb" }) =>
     patch<User>("/me", body),
   athletes: () => get<User[]>("/me/athletes"),
+  athleteProfile: (id: string) =>
+    get<AthleteProfile>(`/athletes/${id}/profile`),
+  saveAthleteProfile: (id: string, body: AthleteProfileIn) =>
+    put<AthleteProfile>(`/athletes/${id}/profile`, body),
 
   myBlocks: () => get<Block[]>("/me/blocks"),
   activeBlock: () => get<Block>("/me/blocks/active"),

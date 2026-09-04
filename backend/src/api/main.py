@@ -17,15 +17,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
+    AthleteProfileIn, AthleteProfileOut,
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
     ExerciseOut, PrescriptionsReplace, ProfileUpdate, SetLogCreate,
     SetLogOut, SetPrescriptionOut, StatusUpdate, UserOut,
     WorkoutOut, WorkoutsGenerate,
 )
 from models import (
-    Block, BlockStatus, Exercise, SetLog, SetPrescription, User,
+    AthleteProfile, Block, BlockStatus, Exercise, SetLog,
+    SetPrescription, User,
 )
-from repositories import blocks, exercises, profiles
+from repositories import athlete_profiles, blocks, exercises, profiles
 from repositories import exercise_definitions as defs
 from repositories import set_logs, set_prescriptions, workouts
 from services import access, planning
@@ -499,3 +501,56 @@ def historial_del_ejercicio(
         conn, bloque.athlete_id, fila["definition_id"], limit
     )
     return [s for s in historico if s.exercise_id != exercise_id]
+
+
+# ---------------------------------------------------------------------
+# Ficha del atleta
+# ---------------------------------------------------------------------
+
+
+def _atleta_a_mi_cargo(
+    conn: psycopg.Connection, athlete_id: uuid.UUID, coach: User
+) -> User:
+    atleta = profiles.get_by_id(conn, athlete_id)
+    if atleta is None or not access.es_su_atleta(coach, atleta):
+        raise HTTPException(404, "Ese atleta no existe")
+    return atleta
+
+
+@app.get("/athletes/{athlete_id}/profile", tags=["perfil"])
+def ficha_del_atleta(
+    athlete_id: uuid.UUID,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> AthleteProfileOut:
+    """La ficha. El propio atleta la ve sin la nota privada del coach."""
+    es_el_mismo = usuario.id == athlete_id
+    if not es_el_mismo:
+        _atleta_a_mi_cargo(conn, athlete_id, usuario)
+
+    ficha = athlete_profiles.get(conn, athlete_id)
+    if ficha is None:
+        ficha = AthleteProfile(athlete_id=athlete_id)
+
+    salida = AthleteProfileOut.model_validate(ficha)
+    if es_el_mismo:
+        salida.coach_note = None
+    return salida
+
+
+@app.put("/athletes/{athlete_id}/profile", tags=["perfil"])
+def guardar_ficha(
+    athlete_id: uuid.UUID,
+    datos: AthleteProfileIn,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> AthleteProfileOut:
+    """Solo el coach edita la ficha de sus atletas."""
+    _atleta_a_mi_cargo(conn, athlete_id, coach)
+
+    athlete_profiles.upsert(conn, AthleteProfile(
+        athlete_id=athlete_id, **datos.model_dump()
+    ))
+    return AthleteProfileOut.model_validate(
+        athlete_profiles.get(conn, athlete_id)
+    )

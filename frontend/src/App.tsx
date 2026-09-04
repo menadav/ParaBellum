@@ -5,7 +5,12 @@ import { ThemeProvider } from "./theme";
 import { LoginPage } from "./auth/LoginPage";
 import { Layout } from "./components/Layout";
 import { Spinner } from "./components/UI";
-import { AthleteDetailPage } from "./pages/AthleteDetailPage";
+import { AthleteLayout } from "./pages/athlete/AthleteLayout";
+import { CalendarioTab } from "./pages/athlete/CalendarioTab";
+import { EstadisticasTab } from "./pages/athlete/EstadisticasTab";
+import { FichaTab } from "./pages/athlete/FichaTab";
+import { ProgramaTab } from "./pages/athlete/ProgramaTab";
+import { ResumenTab } from "./pages/athlete/ResumenTab";
 import { AthletesPage } from "./pages/AthletesPage";
 import { BlockPage } from "./pages/BlockPage";
 import { HomePage } from "./pages/HomePage";
@@ -43,7 +48,13 @@ function Rutas() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="/atletas" element={<AthletesPage />} />
-        <Route path="/atletas/:athleteId" element={<AthleteDetailPage />} />
+        <Route path="/atletas/:athleteId" element={<AthleteLayout />}>
+          <Route index element={<ResumenTab />} />
+          <Route path="programa" element={<ProgramaTab />} />
+          <Route path="calendario" element={<CalendarioTab />} />
+          <Route path="estadisticas" element={<EstadisticasTab />} />
+          <Route path="ficha" element={<FichaTab />} />
+        </Route>
         <Route path="/bloques/:blockId" element={<BlockPage />} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/ajustes" element={<SettingsPage />} />

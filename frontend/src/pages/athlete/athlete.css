@@ -1,0 +1,211 @@
+/* ---------- Pestañas ---------- */
+
+.pestanas {
+  display: flex;
+  gap: var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.pestanas a {
+  position: relative;
+  padding: 0 0 var(--sp-3);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.12s ease;
+}
+
+.pestanas a:hover {
+  color: var(--ink);
+}
+
+.pestanas a.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pestanas a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+.avatar.grande {
+  width: 44px;
+  height: 44px;
+  font-size: 0.9rem;
+}
+
+/* ---------- Resumen ---------- */
+
+.progreso {
+  display: flex;
+  gap: 3px;
+}
+
+.progreso span {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.progreso span.hecha {
+  background: var(--accent);
+}
+
+.marcas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-3);
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.marca.destacada {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.marca-valor {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.marca.destacada .marca-valor {
+  color: var(--accent);
+}
+
+.marca-etiqueta {
+  font-size: 0.66rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- Calendario ---------- */
+
+.calendario {
+  display: flex;
+  gap: 3px;
+  min-width: 560px;
+}
+
+.cal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.cal-mes {
+  font-size: 0.6rem;
+  color: var(--ink-3);
+  height: 12px;
+  white-space: nowrap;
+}
+
+.cal-semana {
+  display: block;
+  width: 100%;
+  min-width: 8px;
+  height: 26px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.cal-semana.ocupada {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.cal-semana.hoy {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* ---------- Gráfica de progreso ---------- */
+
+.grafica {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  height: 180px;
+}
+
+.graf-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 1;
+  height: 100%;
+}
+
+.graf-valor {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.graf-barra {
+  width: 100%;
+  max-width: 46px;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.graf-etiqueta {
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+  width: 100%;
+  text-align: center;
+  padding-top: 6px;
+}
+
+/* ---------- Ficha ---------- */
+
+.ficha-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-4);
+}
+
+.field.ancho {
+  grid-column: 1 / -1;
+}
+
+.input.alto {
+  height: auto;
+  padding: var(--sp-3);
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+}
+
+@media (max-width: 720px) {
+  .marcas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
