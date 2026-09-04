@@ -93,6 +93,17 @@ def _bloque_editable(
 # ---------------------------------------------------------------------
 
 
+@app.get("/", tags=["sistema"], include_in_schema=False)
+def raiz() -> dict:
+    # Un 404 seco en la raiz hace pensar que la API esta caida.
+    return {
+        "servicio": "ParaBellum Coaching API",
+        "version": app.version,
+        "documentacion": "/docs",
+        "estado": "/health",
+    }
+
+
 @app.get("/health", tags=["sistema"])
 def health(conn: psycopg.Connection = Depends(get_conn)) -> dict:
     conn.execute("select 1")
