@@ -140,3 +140,16 @@ export interface DefinitionIn {
   video_url?: string | null;
   image_url?: string | null;
 }
+
+export interface Invitation {
+  id: number;
+  token: string;
+  email: string | null;
+  name: string | null;
+  created_at: string | null;
+  expires_at: string | null;
+  accepted_at: string | null;
+  accepted: boolean;
+  expired: boolean;
+  usable: boolean;
+}

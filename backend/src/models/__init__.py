@@ -1,6 +1,7 @@
 from .athlete_profile import AthleteProfile, Gender
 from .block import Block, BlockStatus, Weekday
 from .exercise import Exercise, ExerciseDefinition
+from .invitation import Invitation
 from .message import Message
 from .set import SetLog, SetPrescription
 from .user import AthleteStatus, Role, User, WeightUnit
@@ -14,6 +15,7 @@ __all__ = [
     "Exercise",
     "ExerciseDefinition",
     "Gender",
+    "Invitation",
     "Message",
     "Role",
     "SetLog",

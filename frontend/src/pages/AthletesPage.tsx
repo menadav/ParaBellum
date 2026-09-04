@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import type { Block } from "../lib/types";
 import { iniciales } from "../components/Sidebar";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
+import { InvitacionesCard } from "./InvitacionesCard";
 import "./athletes.css";
 
 const DIAS = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
@@ -34,6 +35,8 @@ export function AthletesPage() {
           <p>{atletas.length} en total</p>
         </div>
       </div>
+
+      <InvitacionesCard />
 
       <section className="card">
         {atletas.length === 0 ? (

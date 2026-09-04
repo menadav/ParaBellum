@@ -4,6 +4,7 @@ import type {
   AthleteProfileIn,
   Block,
   DefinitionIn,
+  Invitation,
   BlockCreate,
   Exercise,
   ExerciseDefinition,
@@ -163,6 +164,11 @@ export const api = {
     patch<SetLog>(`/exercises/${exerciseId}/logs/${setNumber}/video`, {
       required,
     }),
+
+  invitations: () => get<Invitation[]>("/me/invitations"),
+  createInvitation: (body: { name?: string | null; email?: string | null }) =>
+    post<Invitation>("/me/invitations", body),
+  deleteInvitation: (id: number) => del(`/me/invitations/${id}`),
 
   health: () => get<{ status: string; database: string }>("/health"),
 };

@@ -14,6 +14,7 @@ import { ResumenTab } from "./pages/athlete/ResumenTab";
 import { AthletesPage } from "./pages/AthletesPage";
 import { BlockPage } from "./pages/BlockPage";
 import { HomePage } from "./pages/HomePage";
+import { InvitePage } from "./pages/InvitePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
@@ -39,6 +40,14 @@ export default function App() {
 
 function Rutas() {
   const { session, cargando } = useAuth();
+
+  // El enlace de invitacion se abre SIN cuenta: va antes que el login.
+  if (window.location.pathname.startsWith("/invitar/"))
+    return (
+      <Routes>
+        <Route path="/invitar/:token" element={<InvitePage />} />
+      </Routes>
+    );
 
   if (cargando) return <Spinner label="Cargando…" />;
   if (!session) return <LoginPage />;

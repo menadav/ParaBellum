@@ -256,3 +256,34 @@ class BlockUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     total_weeks: int | None = Field(default=None, ge=1, le=52)
     notes: str | None = None
+
+
+class InvitationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    token: str
+    email: str | None
+    name: str | None
+    created_at: datetime.datetime | None
+    expires_at: datetime.datetime | None
+    accepted_at: datetime.datetime | None
+    accepted: bool
+    expired: bool
+    usable: bool
+
+
+class InvitationIn(BaseModel):
+    email: str | None = Field(default=None, max_length=200)
+    name: str | None = Field(default=None, max_length=80)
+    days: int = Field(default=30, ge=1, le=365)
+
+
+class InvitationPublic(BaseModel):
+    # Lo minimo para que quien abre el enlace sepa donde entra.
+    coach_name: str
+    name: str | None
+    email: str | None
+    usable: bool
+    expired: bool
+    accepted: bool

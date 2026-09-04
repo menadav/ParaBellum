@@ -10,6 +10,7 @@ from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
     AthleteProfileIn, AthleteProfileOut, BlockUpdate, DefinitionIn,
+    InvitationIn, InvitationOut, InvitationPublic,
     ExerciseUpdate,
     ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
@@ -21,7 +22,8 @@ from models import (
     AthleteProfile, Block, BlockStatus, Exercise, ExerciseDefinition,
     SetLog, SetPrescription, User, Workout, WorkoutStatus,
 )
-from repositories import athlete_profiles, blocks, exercises, profiles
+from repositories import athlete_profiles, blocks, exercises
+from repositories import invitations, profiles
 from repositories import exercise_definitions as defs
 from repositories import set_logs, set_prescriptions, workouts
 from services import access, planning
@@ -795,3 +797,63 @@ def editar_bloque(
         notes=datos.notes,
     )
     return blocks.get_by_id(conn, block_id)
+
+
+# ---------------------------------------------------------------------
+# Invitaciones
+# ---------------------------------------------------------------------
+
+
+@app.get("/invitations/{token}", tags=["invitaciones"])
+def ver_invitacion(
+    token: str,
+    conn: psycopg.Connection = Depends(get_conn),
+) -> InvitationPublic:
+    # Sin token de sesion: quien abre el enlace todavia no tiene cuenta.
+    # Solo se devuelve el nombre del coach, nada mas suyo.
+    inv = invitations.get_by_token(conn, token)
+    if inv is None:
+        raise HTTPException(404, "Esta invitacion no existe")
+
+    coach = profiles.get_by_id(conn, inv.coach_id)
+    return InvitationPublic(
+        coach_name=coach.name if coach else "Tu entrenador",
+        name=inv.name,
+        email=inv.email,
+        usable=inv.usable,
+        expired=inv.expired,
+        accepted=inv.accepted,
+    )
+
+
+@app.get("/me/invitations", tags=["invitaciones"])
+def mis_invitaciones(
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[InvitationOut]:
+    return invitations.list_for_coach(conn, coach.id)
+
+
+@app.post("/me/invitations", status_code=201, tags=["invitaciones"])
+def crear_invitacion(
+    datos: InvitationIn,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> InvitationOut:
+    return invitations.create(
+        conn, coach.id,
+        email=datos.email, name=datos.name, dias=datos.days,
+    )
+
+
+@app.delete("/me/invitations/{invitation_id}", status_code=204,
+            tags=["invitaciones"])
+def revocar_invitacion(
+    invitation_id: int,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    mias = {i.id for i in invitations.list_for_coach(conn, coach.id)}
+    if invitation_id not in mias:
+        raise HTTPException(404, "Esa invitacion no existe")
+    invitations.delete(conn, invitation_id)
