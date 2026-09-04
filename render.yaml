@@ -1,16 +1,22 @@
 services:
+  # ------------------------------------------------------------------
+  # La API
+  # ------------------------------------------------------------------
   - type: web
     name: parabellum-api
     runtime: python
-    plan: free                
-    region: frankfurt         
+    plan: free
+    region: frankfurt
+
     buildCommand: pip install -r backend/requirements.txt
     startCommand: >
       uvicorn api.main:app
       --host 0.0.0.0
       --port $PORT
       --app-dir backend/src
+
     healthCheckPath: /health
+
     envVars:
       - key: PYTHON_VERSION
         value: "3.13.4"
@@ -23,4 +29,33 @@ services:
       - key: SUPABASE_SECRET_KEY
         sync: false
       - key: CORS_ORIGINS
+        sync: false
+
+  # ------------------------------------------------------------------
+  # La aplicacion web
+  # ------------------------------------------------------------------
+  - type: web
+    name: parabellum-app
+    runtime: static
+    rootDir: frontend
+
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+
+    # Sin esto, entrar directo a /atletas o a un enlace de invitacion
+    # daria 404: el servidor busca un fichero que no existe. Con la
+    # regla, cualquier ruta devuelve index.html y React Router decide.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    envVars:
+      # Vite las incrusta AL CONSTRUIR, no al arrancar: si cambias
+      # alguna hay que volver a desplegar para que tenga efecto.
+      - key: VITE_API_URL
+        value: https://parabellum-api.onrender.com
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
         sync: false
