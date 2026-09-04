@@ -1,0 +1,159 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-w);
+  flex: none;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4);
+  color: var(--ink);
+}
+
+.sidebar-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.15;
+}
+
+.sidebar-sub {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--sp-3) var(--sp-4);
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 8px var(--sp-3);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.12s ease;
+}
+
+.sidebar-nav a:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.sidebar-nav a.active {
+  background: var(--ground);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.sidebar-athletes {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-3);
+}
+
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 var(--sp-3) var(--sp-2);
+  padding: 0 var(--sp-3);
+  height: 34px;
+  border-radius: var(--r);
+  color: var(--ink-3);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+}
+
+.sidebar-search:focus-within {
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.sidebar-search input {
+  border: 0;
+  background: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.sidebar-athletes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--sp-3) var(--sp-4);
+  overflow-y: auto;
+}
+
+.sidebar-athletes li a {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 7px var(--sp-2);
+  border-radius: var(--r);
+  transition: background 0.12s ease;
+}
+
+.sidebar-athletes li a:hover {
+  background: var(--surface-2);
+}
+
+.sidebar-athletes li a.active {
+  background: var(--ground);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ground);
+  border: 1px solid var(--line);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.sidebar-athlete-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.sidebar-athlete-meta {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.sidebar-vacio {
+  padding: var(--sp-3) var(--sp-2);
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}

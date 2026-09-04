@@ -1,0 +1,249 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 0.85rem;
+  color: var(--warn);
+}
+
+/* ---------- Selector de semanas ---------- */
+
+.semanas {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.semana {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.semana:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.semana.activa {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+
+/* ---------- Dias ---------- */
+
+.dias-picker {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.dia-btn {
+  padding: 7px 14px;
+  border-radius: var(--r);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.dia-btn.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+
+/* ---------- Entreno ---------- */
+
+.entreno-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.entreno-vacio {
+  padding: var(--sp-5);
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+
+.ejercicios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ejercicio {
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.ejercicio + .ejercicio {
+  border-top: 1px solid var(--line);
+}
+
+.ejercicio-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.ejercicio-pos {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--ground);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.e1rm {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ---------- Series ---------- */
+
+.series {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-left: 34px;
+}
+
+.serie {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+.serie-n {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-right: 2px;
+}
+
+.serie-u {
+  font-size: 0.68rem;
+  color: var(--ink-3);
+  margin-left: 1px;
+}
+
+.serie-x {
+  color: var(--ink-3);
+}
+
+.serie-rpe {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.serie-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r);
+  border: 1px dashed var(--line-strong);
+  background: none;
+  color: var(--ink-3);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.serie-add:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+.serie-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input.sm {
+  height: 30px;
+  width: 62px;
+  padding: 0 8px;
+  font-size: 0.82rem;
+}
+
+/* ---------- Buscador de ejercicios ---------- */
+
+.buscador {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.buscador-lista {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.buscador-lista button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 8px var(--sp-3);
+  border: 0;
+  background: none;
+  border-radius: var(--r);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.buscador-lista button:hover {
+  background: var(--surface);
+}

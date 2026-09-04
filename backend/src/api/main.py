@@ -18,7 +18,8 @@ from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
-    ExerciseOut, SetLogCreate, SetLogOut, StatusUpdate, UserOut,
+    ExerciseOut, ProfileUpdate, SetLogCreate, SetLogOut, StatusUpdate,
+    UserOut,
     WorkoutOut, WorkoutsGenerate,
 )
 from models import Block, BlockStatus, Exercise, SetLog, User
@@ -108,6 +109,19 @@ def health(conn: psycopg.Connection = Depends(get_conn)) -> dict:
 def yo(usuario: User = Depends(get_current_user)) -> UserOut:
     """El usuario del token. La primera llamada que hara la app."""
     return usuario
+
+
+@app.patch("/me", tags=["perfil"])
+def actualizar_perfil(
+    datos: ProfileUpdate,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> UserOut:
+    """Cambia el nombre visible o la unidad de peso. Solo lo tuyo."""
+    profiles.update_profile(
+        conn, usuario.id, name=datos.name, weight_unit=datos.weight_unit
+    )
+    return profiles.get_by_id(conn, usuario.id)
 
 
 @app.get("/me/athletes", tags=["perfil"])

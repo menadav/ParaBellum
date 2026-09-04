@@ -13,3 +13,5 @@ env/
 *.xlsx
 *.xls
 *.csv
+node_modules/
+dist/

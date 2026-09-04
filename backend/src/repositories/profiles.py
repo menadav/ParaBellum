@@ -58,3 +58,19 @@ def update_status(
         "update profiles set status = %s where id = %s",
         (status, user_id),
     )
+
+
+def update_profile(
+    conn: psycopg.Connection,
+    user_id: uuid.UUID,
+    name: Optional[str] = None,
+    weight_unit: Optional[WeightUnit] = None,
+) -> None:
+    """Actualiza solo los campos que llegan; coalesce deja el resto igual."""
+    conn.execute(
+        "update profiles set "
+        "  name = coalesce(%s, name), "
+        "  weight_unit = coalesce(%s::text, weight_unit) "
+        "where id = %s",
+        (name, weight_unit.value if weight_unit else None, user_id),
+    )

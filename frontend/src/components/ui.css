@@ -1,0 +1,150 @@
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+}
+
+.spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  font-size: 0.85rem;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+
+.errorbox {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r);
+  background: var(--accent-soft);
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.meter-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.meter-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.meter-track {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.ring-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.ring-num {
+  font-size: 30px;
+  font-weight: 600;
+  font-family: var(--sans);
+}
+
+.ring-cap {
+  font-size: 11px;
+  font-family: var(--sans);
+  letter-spacing: 0.04em;
+}
+
+/* Grafico de barras del pronostico de bloques */
+.bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+  align-items: end;
+  height: 150px;
+  padding-top: var(--sp-4);
+}
+
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-num {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.bar {
+  width: 100%;
+  max-width: 44px;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.bar.cero {
+  background: var(--line-strong);
+}
+
+.bar-label {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+  width: 100%;
+  text-align: center;
+  padding-top: var(--sp-2);
+}
+
+.bar-label.destacado {
+  color: var(--ink);
+  font-weight: 500;
+}

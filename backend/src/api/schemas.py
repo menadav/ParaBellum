@@ -151,3 +151,10 @@ class SetLogCreate(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: BlockStatus
+
+
+class ProfileUpdate(BaseModel):
+    """Lo que un usuario puede cambiar de su propio perfil."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    weight_unit: WeightUnit | None = None

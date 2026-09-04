@@ -1,0 +1,34 @@
+.marca {
+  display: block;
+  width: auto;
+  object-fit: contain;
+}
+
+/* En oscuro el logo negro se volveria invisible: lo pasamos a blanco. */
+:root[data-theme="dark"] .marca-invertible {
+  filter: brightness(0) invert(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .marca-invertible {
+    filter: brightness(0) invert(1);
+  }
+}
+
+.marca-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.marca-nombre {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.marca-sub {
+  font-size: 0.55em;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}

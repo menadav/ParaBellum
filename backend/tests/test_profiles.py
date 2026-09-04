@@ -56,3 +56,26 @@ def test_update_status_cambia_el_estado(conn, athlete):
     u = profiles.get_by_id(conn, athlete)
     assert u.status == AthleteStatus.INACTIVE
     # No hace falta deshacerlo: el rollback del fixture ya lo hace.
+
+
+def test_update_profile_cambia_el_nombre(conn, athlete):
+    profiles.update_profile(conn, athlete, name="David Mena")
+
+    assert profiles.get_by_id(conn, athlete).name == "David Mena"
+
+
+def test_update_profile_no_pisa_lo_que_no_se_manda(conn, athlete):
+    """coalesce: mandar solo el nombre deja la unidad como estaba."""
+    from models import WeightUnit
+
+    antes = profiles.get_by_id(conn, athlete).weight_unit
+    profiles.update_profile(conn, athlete, name="Solo el nombre")
+
+    despues = profiles.get_by_id(conn, athlete)
+    assert despues.name == "Solo el nombre"
+    assert despues.weight_unit == antes
+
+    profiles.update_profile(conn, athlete, weight_unit=WeightUnit.LB)
+    final = profiles.get_by_id(conn, athlete)
+    assert final.weight_unit == WeightUnit.LB
+    assert final.name == "Solo el nombre"
