@@ -59,7 +59,8 @@ def list_for_coach(
     conn: psycopg.Connection, coach_id: uuid.UUID
 ) -> list[Block]:
     table = conn.execute(
-        f"select {_COLUMNS} from blocks where coach_id = %s order by name",
+        f"select {_COLUMNS} from blocks where coach_id = %s "
+        "order by start_date desc",
         (coach_id, )
     ).fetchall()
     return [_row_to_block(row) for row in table]
