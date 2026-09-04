@@ -98,6 +98,7 @@ create table set_logs (
     rpe              numeric(3,1) check (rpe is null or rpe between 1 and 10),
     prescription_id  bigint       references set_prescriptions(id) on delete set null,
     logged_by        uuid         references profiles(id),  -- coach = pendiente
+    video_required   boolean      not null default false,
     completed_at     timestamptz  not null default now(),
 
     unique (exercise_id, set_number)

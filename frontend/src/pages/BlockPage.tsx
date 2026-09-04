@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { User, Weekday } from "../lib/types";
+import type { Block, User, Weekday } from "../lib/types";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
@@ -16,6 +16,7 @@ export function BlockPage() {
   const id = Number(blockId);
   const [semana, setSemana] = useState(1);
   const usuario = useOutletContext<User>();
+  const esCoach = usuario.role === "coach";
   const qc = useQueryClient();
 
   const bloqueQ = useQuery({
@@ -28,11 +29,12 @@ export function BlockPage() {
     enabled: !!bloqueQ.data,
   });
 
-  const activar = useMutation({
-    mutationFn: () => api.setBlockStatus(id, "active"),
+  const cambiarEstado = useMutation({
+    mutationFn: (estado: Block["status"]) => api.setBlockStatus(id, estado),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bloque", id] });
       qc.invalidateQueries({ queryKey: ["misBloques"] });
+      qc.invalidateQueries({ queryKey: ["bloquesAtleta"] });
     },
   });
 
@@ -57,18 +59,41 @@ export function BlockPage() {
           </p>
         </div>
 
-        {bloque.status === "draft" && (
-          <button
-            className="btn"
-            disabled={activar.isPending}
-            onClick={() => activar.mutate()}
-          >
-            {activar.isPending ? "Activando…" : "Activar bloque"}
-          </button>
+        {esCoach && (
+          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+            {bloque.status !== "active" && (
+              <button
+                className="btn"
+                disabled={cambiarEstado.isPending}
+                onClick={() => cambiarEstado.mutate("active")}
+              >
+                Activar bloque
+              </button>
+            )}
+            {bloque.status === "active" && (
+              <>
+                <button
+                  className="btn ghost"
+                  disabled={cambiarEstado.isPending}
+                  onClick={() => cambiarEstado.mutate("draft")}
+                  title="Vuelve a borrador: el atleta deja de verlo"
+                >
+                  Desactivar
+                </button>
+                <button
+                  className="btn ghost"
+                  disabled={cambiarEstado.isPending}
+                  onClick={() => cambiarEstado.mutate("completed")}
+                >
+                  Dar por terminado
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
-      {activar.error && <ErrorBox error={activar.error} />}
+      {cambiarEstado.error && <ErrorBox error={cambiarEstado.error} />}
 
       <nav className="semanas" aria-label="Semanas del bloque">
         {Array.from({ length: bloque.total_weeks }, (_, i) => i + 1).map(
@@ -105,6 +130,13 @@ export function BlockPage() {
         </section>
       ) : (
         <div className="stack" style={{ gap: "var(--sp-4)" }}>
+          {esCoach && bloque.status !== "completed" && (
+            <AnadirDia
+              blockId={id}
+              semana={semana}
+              ocupados={entrenos.map((w) => w.day_of_week)}
+            />
+          )}
           {entrenos.map((w) => (
             <WorkoutCard
               key={w.id}
@@ -185,4 +217,109 @@ function fechaDe(inicio: Date, semana: number, dia: number): Date {
   const d = new Date(inicio);
   d.setDate(inicio.getDate() + (semana - 1) * 7 + dia);
   return d;
+}
+
+
+/** Anade un dia suelto a la semana que se este viendo. */
+function AnadirDia({
+  blockId,
+  semana,
+  ocupados,
+}: {
+  blockId: number;
+  semana: number;
+  ocupados: Weekday[];
+}) {
+  const qc = useQueryClient();
+  const [abierto, setAbierto] = useState(false);
+  const [dia, setDia] = useState<Weekday | null>(null);
+  const [nombre, setNombre] = useState("");
+
+  const anadir = useMutation({
+    mutationFn: () =>
+      api.addWorkout(blockId, {
+        name: nombre.trim() || `Día ${ocupados.length + 1}`,
+        week_number: semana,
+        day_of_week: dia!,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["entrenos", blockId] });
+      setAbierto(false);
+      setDia(null);
+      setNombre("");
+    },
+  });
+
+  const libres = ([0, 1, 2, 3, 4, 5, 6] as Weekday[]).filter(
+    (d) => !ocupados.includes(d)
+  );
+
+  if (libres.length === 0) return null;
+
+  if (!abierto)
+    return (
+      <button
+        className="btn ghost"
+        style={{ alignSelf: "flex-start" }}
+        onClick={() => setAbierto(true)}
+      >
+        <Icon name="plus" size={16} />
+        Añadir día a la semana {semana}
+      </button>
+    );
+
+  return (
+    <section className="card">
+      <form
+        className="card-body stack"
+        style={{ gap: "var(--sp-4)" }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (dia != null) anadir.mutate();
+        }}
+      >
+        <div className="spread">
+          <h2>Nuevo día · semana {semana}</h2>
+          <button
+            type="button"
+            className="btn subtle sm"
+            onClick={() => setAbierto(false)}
+          >
+            Cancelar
+          </button>
+        </div>
+
+        <div className="dias-picker" style={{ justifyContent: "flex-start" }}>
+          {libres.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={`dia-btn ${dia === d ? "on" : ""}`}
+              onClick={() => setDia(d)}
+            >
+              {DIAS[d].slice(0, 3)}
+            </button>
+          ))}
+        </div>
+
+        <label className="field" style={{ maxWidth: 320 }}>
+          <span className="label">Nombre de la sesión</span>
+          <input
+            className="input"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Día 4 · Full body"
+          />
+        </label>
+
+        {anadir.error && <ErrorBox error={anadir.error} />}
+
+        <div>
+          <button className="btn" disabled={dia == null || anadir.isPending}>
+            {anadir.isPending ? "Añadiendo…" : "Añadir día"}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
 }

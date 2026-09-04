@@ -30,6 +30,8 @@ class SetLog:
     completed_at: Optional[datetime.datetime] = None
     # Quien la escribio. Si es el coach, esta pendiente de hacer.
     logged_by: Optional[uuid.UUID] = None
+    # El coach pide que el atleta grabe esta serie.
+    video_required: bool = False
 
     @property
     def estimated_1rm(self) -> Optional[float]:

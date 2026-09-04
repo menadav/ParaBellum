@@ -87,3 +87,19 @@ def remove(conn: psycopg.Connection, exercise_id: int) -> None:
         "delete from exercises where id = %s",
         (exercise_id,),
     )
+
+
+def update(
+    conn: psycopg.Connection,
+    exercise_id: int,
+    notes: Optional[str] = None,
+    superset_group: Optional[str] = None,
+) -> None:
+    """Cambia las notas del coach o el grupo de superserie."""
+    conn.execute(
+        "update exercises set "
+        "  notes = coalesce(%s::text, notes), "
+        "  superset_group = coalesce(%s::text, superset_group) "
+        "where id = %s",
+        (notes, superset_group, exercise_id),
+    )

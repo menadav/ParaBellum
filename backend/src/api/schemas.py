@@ -55,6 +55,7 @@ class SetLogOut(BaseModel):
     completed_at: datetime.datetime | None
     estimated_1rm: float | None
     logged_by: uuid.UUID | None
+    video_required: bool
 
 
 class ExerciseOut(BaseModel):
@@ -235,3 +236,42 @@ class AthleteProfileIn(BaseModel):
     best_bench: float | None = Field(default=None, gt=0)
     best_deadlift: float | None = Field(default=None, gt=0)
     coach_note: str | None = None
+
+
+class VideoRequired(BaseModel):
+    required: bool
+
+
+class DefinitionIn(BaseModel):
+    """Un ejercicio del catalogo, creado o editado por el coach."""
+
+    name: str = Field(min_length=1, max_length=120)
+    explanation: str = Field(default="", max_length=2000)
+    muscle_group: str | None = Field(default=None, max_length=60)
+    video_url: str | None = Field(default=None, max_length=500)
+    image_url: str | None = Field(default=None, max_length=500)
+
+
+class WorkoutIn(BaseModel):
+    """Una sesion suelta anadida a un bloque."""
+
+    name: str = Field(min_length=1, max_length=120)
+    week_number: int = Field(ge=1)
+    day_of_week: Weekday
+
+
+class WorkoutUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    status: WorkoutStatus | None = None
+    athlete_notes: str | None = None
+
+
+class ExerciseUpdate(BaseModel):
+    notes: str | None = None
+    superset_group: str | None = Field(default=None, max_length=10)
+
+
+class ReorderIn(BaseModel):
+    """Los ids en el orden que quiere el coach."""
+
+    exercise_ids: list[int] = Field(min_length=1, max_length=50)

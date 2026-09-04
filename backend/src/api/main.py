@@ -17,15 +17,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
-    AthleteProfileIn, AthleteProfileOut,
+    AthleteProfileIn, AthleteProfileOut, DefinitionIn, ExerciseUpdate,
+    ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
     ExerciseOut, PrescriptionsReplace, ProfileUpdate, SetLogCreate,
     SetLogOut, SetPrescriptionOut, StatusUpdate, UserOut,
     WorkoutOut, WorkoutsGenerate,
 )
 from models import (
-    AthleteProfile, Block, BlockStatus, Exercise, SetLog,
-    SetPrescription, User,
+    AthleteProfile, Block, BlockStatus, Exercise, ExerciseDefinition,
+    SetLog, SetPrescription, User, Workout, WorkoutStatus,
 )
 from repositories import athlete_profiles, blocks, exercises, profiles
 from repositories import exercise_definitions as defs
@@ -554,3 +555,256 @@ def guardar_ficha(
     return AthleteProfileOut.model_validate(
         athlete_profiles.get(conn, athlete_id)
     )
+
+
+# ---------------------------------------------------------------------
+# Catalogo: crear, editar y borrar
+# ---------------------------------------------------------------------
+
+
+def _definicion_mia(
+    conn: psycopg.Connection, definition_id: int, coach: User
+) -> ExerciseDefinition:
+    """Un ejercicio del catalogo que ese coach puede tocar.
+
+    Los globales (coach_id NULL) los ve todo el mundo pero no los edita
+    nadie: son de la app, no de un coach.
+    """
+    d = defs.get_by_id(conn, definition_id)
+    if d is None:
+        raise HTTPException(404, "Ese ejercicio no existe")
+    if d.coach_id != coach.id:
+        raise HTTPException(403, "Ese ejercicio no es tuyo")
+    return d
+
+
+@app.post("/exercise-definitions", status_code=201, tags=["catalogo"])
+def crear_ejercicio(
+    datos: DefinitionIn,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> ExerciseDefinitionOut:
+    """Anade un ejercicio a tu catalogo."""
+    nuevo_id = defs.create(conn, ExerciseDefinition(
+        id=0,
+        name=datos.name,
+        explanation=datos.explanation,
+        coach_id=coach.id,
+        muscle_group=datos.muscle_group,
+        video_url=datos.video_url,
+        image_url=datos.image_url,
+    ))
+    return defs.get_by_id(conn, nuevo_id)
+
+
+@app.put("/exercise-definitions/{definition_id}", tags=["catalogo"])
+def editar_ejercicio(
+    definition_id: int,
+    datos: DefinitionIn,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> ExerciseDefinitionOut:
+    """Edita uno de tus ejercicios."""
+    _definicion_mia(conn, definition_id, coach)
+    defs.update(conn, ExerciseDefinition(
+        id=definition_id,
+        name=datos.name,
+        explanation=datos.explanation,
+        coach_id=coach.id,
+        muscle_group=datos.muscle_group,
+        video_url=datos.video_url,
+        image_url=datos.image_url,
+    ))
+    return defs.get_by_id(conn, definition_id)
+
+
+@app.delete("/exercise-definitions/{definition_id}", status_code=204,
+            tags=["catalogo"])
+def borrar_ejercicio(
+    definition_id: int,
+    coach: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    """Borra un ejercicio del catalogo, si no lo usa ningun entreno."""
+    _definicion_mia(conn, definition_id, coach)
+    try:
+        defs.delete(conn, definition_id)
+    except psycopg.errors.ForeignKeyViolation:
+        raise HTTPException(
+            409,
+            "Este ejercicio esta en uso en algun entreno. No se puede "
+            "borrar sin perder ese historico.",
+        )
+
+
+# ---------------------------------------------------------------------
+# Sesiones: anadir, editar y borrar sueltas
+# ---------------------------------------------------------------------
+
+
+@app.post("/blocks/{block_id}/workouts/one", status_code=201,
+          tags=["entrenos"])
+def anadir_sesion(
+    block_id: int,
+    datos: WorkoutIn,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> WorkoutOut:
+    """Anade un dia suelto a un bloque que ya existe."""
+    bloque = _bloque_editable(conn, block_id, usuario)
+    if datos.week_number > bloque.total_weeks:
+        raise HTTPException(
+            400, f"El bloque solo tiene {bloque.total_weeks} semanas"
+        )
+    try:
+        nuevo_id = workouts.create(conn, Workout(
+            id=0,
+            block_id=block_id,
+            name=datos.name,
+            week_number=datos.week_number,
+            day_of_week=datos.day_of_week,
+            status=WorkoutStatus.PLANNED,
+        ))
+    except psycopg.errors.UniqueViolation:
+        raise HTTPException(409, "Ya hay una sesion ese dia de esa semana")
+    return workouts.get_by_id(conn, nuevo_id)
+
+
+@app.patch("/workouts/{workout_id}", tags=["entrenos"])
+def editar_sesion(
+    workout_id: int,
+    datos: WorkoutUpdate,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> WorkoutOut:
+    """Renombra la sesion o cambia su estado."""
+    entreno = workouts.get_by_id(conn, workout_id)
+    if entreno is None:
+        raise HTTPException(404, "Esa sesion no existe")
+    bloque = _bloque_visible(conn, entreno.block_id, usuario)
+    if not access.puede_gestionar_series(usuario, bloque):
+        raise HTTPException(403, "Este entreno no es tuyo")
+
+    workouts.update(
+        conn, workout_id,
+        name=datos.name, status=datos.status,
+        athlete_notes=datos.athlete_notes,
+    )
+    return workouts.get_by_id(conn, workout_id)
+
+
+@app.delete("/workouts/{workout_id}", status_code=204, tags=["entrenos"])
+def borrar_sesion(
+    workout_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    """Borra la sesion con sus ejercicios y series."""
+    entreno = workouts.get_by_id(conn, workout_id)
+    if entreno is None:
+        raise HTTPException(404, "Esa sesion no existe")
+    _bloque_editable(conn, entreno.block_id, usuario)
+    workouts.delete(conn, workout_id)
+
+
+# ---------------------------------------------------------------------
+# Ejercicios dentro de un entreno
+# ---------------------------------------------------------------------
+
+
+def _entreno_editable(
+    conn: psycopg.Connection, exercise_id: int, usuario: User
+) -> int:
+    block_id = _bloque_del_ejercicio(conn, exercise_id)
+    _bloque_editable(conn, block_id, usuario)
+    return block_id
+
+
+@app.patch("/exercises/{exercise_id}", tags=["entrenos"])
+def editar_ejercicio_del_entreno(
+    exercise_id: int,
+    datos: ExerciseUpdate,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> ExerciseOut:
+    """Notas del coach para ese ejercicio, o grupo de superserie."""
+    _entreno_editable(conn, exercise_id, usuario)
+    exercises.update(
+        conn, exercise_id,
+        notes=datos.notes, superset_group=datos.superset_group,
+    )
+    fila = conn.execute(
+        "select workout_id from exercises where id = %s", (exercise_id,)
+    ).fetchone()
+    return [e for e in exercises.list_for_workout(conn, fila["workout_id"])
+            if e.id == exercise_id][0]
+
+
+@app.delete("/exercises/{exercise_id}", status_code=204, tags=["entrenos"])
+def quitar_ejercicio(
+    exercise_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    """Saca el ejercicio del entreno, con sus series."""
+    _entreno_editable(conn, exercise_id, usuario)
+    exercises.remove(conn, exercise_id)
+
+
+@app.put("/workouts/{workout_id}/exercises/order", tags=["entrenos"])
+def reordenar_ejercicios(
+    workout_id: int,
+    datos: ReorderIn,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[ExerciseOut]:
+    """Recoloca los ejercicios en el orden que manda el coach."""
+    entreno = workouts.get_by_id(conn, workout_id)
+    if entreno is None:
+        raise HTTPException(404, "Esa sesion no existe")
+    _bloque_editable(conn, entreno.block_id, usuario)
+
+    actuales = {e.id for e in exercises.list_for_workout(conn, workout_id)}
+    if set(datos.exercise_ids) != actuales:
+        raise HTTPException(
+            400,
+            "La lista tiene que traer exactamente los ejercicios de "
+            "esta sesion",
+        )
+    exercises.reorder(conn, workout_id, datos.exercise_ids)
+    return exercises.list_for_workout(conn, workout_id)
+
+
+# ---------------------------------------------------------------------
+# Grabar la serie
+# ---------------------------------------------------------------------
+
+
+@app.patch("/exercises/{exercise_id}/logs/{set_number}/video",
+           tags=["series"])
+def marcar_para_grabar(
+    exercise_id: int,
+    set_number: int,
+    datos: VideoRequired,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> SetLogOut:
+    """El coach pide que el atleta grabe esta serie."""
+    block_id = _bloque_del_ejercicio(conn, exercise_id)
+    bloque = _bloque_visible(conn, block_id, usuario)
+    if not access.puede_editar_bloque(usuario, bloque):
+        raise HTTPException(
+            403, "Solo el coach del bloque marca las series"
+        )
+
+    set_logs.set_video_required(
+        conn, exercise_id, set_number, datos.required
+    )
+    serie = next(
+        (s for s in set_logs.list_for_exercise(conn, exercise_id)
+         if s.set_number == set_number),
+        None,
+    )
+    if serie is None:
+        raise HTTPException(404, "Esa serie no existe")
+    return serie

@@ -6,7 +6,7 @@ from models import SetLog
 
 _COLUMNS = (
     "id, exercise_id, set_number, reps, weight, rpe, "
-    "prescription_id, completed_at, logged_by"
+    "prescription_id, completed_at, logged_by, video_required"
 )
 
 _COLUMNS_SL = ", ".join(f"sl.{c}" for c in _COLUMNS.split(", "))
@@ -28,6 +28,7 @@ def _row_to_set_log(row: dict) -> SetLog:
         prescription_id=row["prescription_id"],
         completed_at=row["completed_at"],
         logged_by=row["logged_by"],
+        video_required=row["video_required"],
     )
 
 
@@ -107,4 +108,22 @@ def delete(conn: psycopg.Connection, set_log_id: int) -> None:
     conn.execute(
         "delete from set_logs where id = %s",
         (set_log_id,),
+    )
+
+
+def set_video_required(
+    conn: psycopg.Connection,
+    exercise_id: int,
+    set_number: int,
+    requerido: bool,
+) -> None:
+    """Marca o desmarca una serie como 'grabala'.
+
+    Endpoint aparte y no parte del upsert a proposito: asi el atleta
+    corrige sus pesos sin borrar la marca que puso el coach.
+    """
+    conn.execute(
+        "update set_logs set video_required = %s "
+        "where exercise_id = %s and set_number = %s",
+        (requerido, exercise_id, set_number),
     )

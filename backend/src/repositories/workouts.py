@@ -115,3 +115,31 @@ def mark_completed(
         "where id = %s",
         (WorkoutStatus.COMPLETED.value, athlete_notes, workout_id),
     )
+
+
+def update(
+    conn: psycopg.Connection,
+    workout_id: int,
+    name: Optional[str] = None,
+    status: Optional[WorkoutStatus] = None,
+    athlete_notes: Optional[str] = None,
+) -> None:
+    """Actualiza solo lo que llega; coalesce deja el resto igual."""
+    conn.execute(
+        "update workouts set "
+        "  name = coalesce(%s, name), "
+        "  status = coalesce(%s::text, status), "
+        "  athlete_notes = coalesce(%s::text, athlete_notes) "
+        "where id = %s",
+        (
+            name,
+            status.value if status else None,
+            athlete_notes,
+            workout_id,
+        ),
+    )
+
+
+def delete(conn: psycopg.Connection, workout_id: int) -> None:
+    """Borra una sesion. El cascade se lleva ejercicios y series."""
+    conn.execute("delete from workouts where id = %s", (workout_id,))

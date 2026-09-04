@@ -58,13 +58,16 @@ export function WorkoutCard({
           </span>
         </div>
         {editable && esCoach && (
-          <button
-            className="btn ghost sm"
-            onClick={() => setAnadiendo((v) => !v)}
-          >
-            <Icon name="plus" size={15} />
-            Ejercicio
-          </button>
+          <div className="row" style={{ gap: 4 }}>
+            <button
+              className="btn ghost sm"
+              onClick={() => setAnadiendo((v) => !v)}
+            >
+              <Icon name="plus" size={15} />
+              Ejercicio
+            </button>
+            <BorrarSesion workoutId={workout.id} blockId={workout.block_id} />
+          </div>
         )}
       </div>
 
@@ -91,6 +94,7 @@ export function WorkoutCard({
               series={series.filter((s) => s.exercise_id === e.id)}
               athleteId={bloque.athlete_id}
               editable={editable}
+              esCoach={esCoach}
             />
           ))}
         </ul>
@@ -107,6 +111,7 @@ function FilaEjercicio({
   series,
   athleteId,
   editable,
+  esCoach,
 }: {
   exerciseId: number;
   posicion: number;
@@ -115,6 +120,7 @@ function FilaEjercicio({
   series: SetLog[];
   athleteId: string;
   editable: boolean;
+  esCoach: boolean;
 }) {
   const mejor = series.reduce<number | null>(
     (max, s) =>
@@ -138,6 +144,9 @@ function FilaEjercicio({
           )}
         </span>
         {mejor && <span className="e1rm num">1RM est. {mejor} kg</span>}
+        {editable && esCoach && (
+          <QuitarEjercicio exerciseId={exerciseId} workoutId={workoutId} />
+        )}
       </div>
 
       <div className="ejercicio-cuerpo">
@@ -152,6 +161,7 @@ function FilaEjercicio({
               workoutId={workoutId}
               hecha={s.logged_by === athleteId}
               puedeTocar={editable}
+              esCoach={esCoach}
             />
           ))}
           {editable && (
@@ -221,12 +231,14 @@ function SerieChip({
   workoutId,
   hecha,
   puedeTocar,
+  esCoach,
 }: {
   serie: SetLog;
   exerciseId: number;
   workoutId: number;
   hecha: boolean;
   puedeTocar: boolean;
+  esCoach: boolean;
 }) {
   const qc = useQueryClient();
   const [editando, setEditando] = useState(false);
@@ -238,6 +250,16 @@ function SerieChip({
 
   const borrar = useMutation({
     mutationFn: () => api.deleteLog(exerciseId, serie.set_number),
+    onSuccess: invalidar,
+  });
+
+  const grabar = useMutation({
+    mutationFn: () =>
+      api.setVideoRequired(
+        exerciseId,
+        serie.set_number,
+        !serie.video_required
+      ),
     onSuccess: invalidar,
   });
 
@@ -255,9 +277,15 @@ function SerieChip({
   return (
     <span
       className={`serie ${hecha ? "hecha" : "pendiente"} ${
-        borrar.isPending ? "borrando" : ""
-      }`}
-      title={hecha ? undefined : "Pendiente: lo dejo planificado el coach"}
+        serie.video_required ? "grabar" : ""
+      } ${borrar.isPending ? "borrando" : ""}`}
+      title={
+        serie.video_required
+          ? "El coach pide que grabes esta serie"
+          : hecha
+            ? undefined
+            : "Pendiente: lo dejo planificado el coach"
+      }
     >
       <button
         type="button"
@@ -276,7 +304,27 @@ function SerieChip({
         {serie.rpe != null && (
           <span className="serie-rpe num">@{serie.rpe}</span>
         )}
+        {serie.video_required && (
+          <span className="serie-video" aria-label="Grabar esta serie">
+            <IconVideo />
+          </span>
+        )}
       </button>
+      {puedeTocar && esCoach && (
+        <button
+          className={`serie-marcar ${serie.video_required ? "on" : ""}`}
+          onClick={() => grabar.mutate()}
+          disabled={grabar.isPending}
+          title={
+            serie.video_required
+              ? "Quitar el aviso de grabar"
+              : "Pedir al atleta que grabe esta serie"
+          }
+          aria-label="Pedir vídeo de esta serie"
+        >
+          <IconVideo />
+        </button>
+      )}
       {puedeTocar && (
         <button
           className="serie-borrar"
@@ -492,5 +540,121 @@ function BuscadorEjercicios({
         )}
       </ul>
     </div>
+  );
+}
+
+
+function IconVideo() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m23 7-7 5 7 5V7z" />
+      <rect x="1" y="5" width="15" height="14" rx="2" />
+    </svg>
+  );
+}
+
+/** Quita un ejercicio del entreno, con confirmacion en dos pasos. */
+function QuitarEjercicio({
+  exerciseId,
+  workoutId,
+}: {
+  exerciseId: number;
+  workoutId: number;
+}) {
+  const qc = useQueryClient();
+  const [confirmando, setConfirmando] = useState(false);
+
+  const quitar = useMutation({
+    mutationFn: () => api.removeExercise(exerciseId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ejercicios", workoutId] });
+      qc.invalidateQueries({ queryKey: ["series", workoutId] });
+    },
+  });
+
+  if (!confirmando)
+    return (
+      <button
+        className="btn subtle sm"
+        onClick={() => setConfirmando(true)}
+        title="Quitar del entreno"
+        aria-label="Quitar ejercicio del entreno"
+      >
+        <Icon name="trash" size={14} />
+      </button>
+    );
+
+  return (
+    <span className="row" style={{ gap: 4 }}>
+      <button
+        className="btn sm"
+        onClick={() => quitar.mutate()}
+        disabled={quitar.isPending}
+      >
+        {quitar.isPending ? "…" : "Quitar"}
+      </button>
+      <button
+        className="btn subtle sm"
+        onClick={() => setConfirmando(false)}
+      >
+        No
+      </button>
+    </span>
+  );
+}
+
+/** Borra la sesion entera. El cascade se lleva ejercicios y series. */
+function BorrarSesion({
+  workoutId,
+  blockId,
+}: {
+  workoutId: number;
+  blockId: number;
+}) {
+  const qc = useQueryClient();
+  const [confirmando, setConfirmando] = useState(false);
+
+  const borrar = useMutation({
+    mutationFn: () => api.deleteWorkout(workoutId),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["entrenos", blockId] }),
+  });
+
+  if (!confirmando)
+    return (
+      <button
+        className="btn subtle sm"
+        onClick={() => setConfirmando(true)}
+        title="Borrar esta sesión"
+        aria-label="Borrar esta sesión"
+      >
+        <Icon name="trash" size={15} />
+      </button>
+    );
+
+  return (
+    <span className="row" style={{ gap: 4 }}>
+      <span className="muted celda-meta">¿Borrar el día?</span>
+      <button
+        className="btn sm"
+        onClick={() => borrar.mutate()}
+        disabled={borrar.isPending}
+      >
+        {borrar.isPending ? "…" : "Sí"}
+      </button>
+      <button className="btn subtle sm" onClick={() => setConfirmando(false)}>
+        No
+      </button>
+    </span>
   );
 }

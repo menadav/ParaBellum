@@ -3,6 +3,7 @@ import type {
   AthleteProfile,
   AthleteProfileIn,
   Block,
+  DefinitionIn,
   BlockCreate,
   Exercise,
   ExerciseDefinition,
@@ -10,6 +11,7 @@ import type {
   SetLog,
   SetPrescription,
   User,
+  Weekday,
   Workout,
   WorkoutsGenerate,
 } from "./types";
@@ -128,6 +130,37 @@ export const api = {
 
   exerciseHistory: (exerciseId: number) =>
     get<SetLog[]>(`/exercises/${exerciseId}/history`),
+
+  createDefinition: (body: DefinitionIn) =>
+    post<ExerciseDefinition>("/exercise-definitions", body),
+  updateDefinition: (id: number, body: DefinitionIn) =>
+    put<ExerciseDefinition>(`/exercise-definitions/${id}`, body),
+  deleteDefinition: (id: number) => del(`/exercise-definitions/${id}`),
+
+  addWorkout: (
+    blockId: number,
+    body: { name: string; week_number: number; day_of_week: Weekday }
+  ) => post<Workout>(`/blocks/${blockId}/workouts/one`, body),
+  updateWorkout: (
+    id: number,
+    body: { name?: string; status?: Workout["status"] }
+  ) => patch<Workout>(`/workouts/${id}`, body),
+  deleteWorkout: (id: number) => del(`/workouts/${id}`),
+
+  removeExercise: (id: number) => del(`/exercises/${id}`),
+  reorderExercises: (workoutId: number, exercise_ids: number[]) =>
+    put<Exercise[]>(`/workouts/${workoutId}/exercises/order`, {
+      exercise_ids,
+    }),
+
+  setVideoRequired: (
+    exerciseId: number,
+    setNumber: number,
+    required: boolean
+  ) =>
+    patch<SetLog>(`/exercises/${exerciseId}/logs/${setNumber}/video`, {
+      required,
+    }),
 
   health: () => get<{ status: string; database: string }>("/health"),
 };

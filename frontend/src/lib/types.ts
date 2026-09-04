@@ -75,6 +75,8 @@ export interface SetLog {
   estimated_1rm: number | null;
   /** Quien la escribio. Si no es el atleta, esta pendiente. */
   logged_by: string | null;
+  /** El coach pide que grabe esta serie. */
+  video_required: boolean;
 }
 
 export interface BlockCreate {
@@ -134,3 +136,11 @@ export type AthleteProfileIn = Omit<
   AthleteProfile,
   "athlete_id" | "age" | "total"
 >;
+
+export interface DefinitionIn {
+  name: string;
+  explanation: string;
+  muscle_group?: string | null;
+  video_url?: string | null;
+  image_url?: string | null;
+}
