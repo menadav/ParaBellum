@@ -1,0 +1,48 @@
+# Configuracion del despliegue en Render.
+#
+# Esto se llama "infraestructura como codigo": en vez de configurar el
+# servidor pinchando botones, esta escrito en un fichero que vive en
+# git. Asi cualquiera puede recrear el despliegue, y los cambios de
+# configuracion quedan en el historial como cualquier otro cambio.
+#
+# En Render: New > Blueprint > apuntar a este repositorio.
+
+services:
+  - type: web
+    name: parabellum-api
+    runtime: python
+    plan: free                 # 750 h/mes, se duerme a los 15 min
+    region: frankfurt          # el mismo sitio que tu base de datos
+
+    buildCommand: pip install -r backend/requirements.txt
+
+    # --host 0.0.0.0 es OBLIGATORIO: por defecto uvicorn solo escucha
+    # peticiones de la propia maquina, y aqui vienen de fuera.
+    # $PORT lo decide Render, no se puede fijar a mano.
+    startCommand: >
+      uvicorn api.main:app
+      --host 0.0.0.0
+      --port $PORT
+      --app-dir backend/src
+
+    # Render llama aqui cada poco. Si deja de responder, reinicia.
+    healthCheckPath: /health
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.4"
+
+      # sync: false significa "esta variable la relleno yo a mano en el
+      # panel, NO la guardes en este fichero". Es como se manejan los
+      # secretos con infraestructura como codigo: el fichero dice que
+      # variables hacen falta, nunca lo que valen.
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

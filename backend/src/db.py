@@ -7,7 +7,6 @@ import psycopg
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
 
-# src/db.py -> src -> backend
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BACKEND_DIR / ".env")

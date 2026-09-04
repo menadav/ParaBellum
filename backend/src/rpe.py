@@ -1,0 +1,87 @@
+"""Tabla RPE x repeticiones -> porcentaje del 1RM.
+
+Extraida del Excel de Para Bellum. En la hoja de calculo vivia dentro
+de una formula anidada de 8.000 caracteres, repetida en cada celda.
+Aqui son unos datos y tres funciones.
+"""
+
+# {rpe: {repeticiones: fraccion del 1RM}}
+RPE_CHART: dict[float, dict[int, float]] = {
+    10.0: {
+        1: 1.0, 2: 0.955, 3: 0.922, 4: 0.892, 5: 0.863, 6: 0.837, 7:
+        0.811, 8: 0.786, 9: 0.762, 10: 0.739, 11: 0.707, 12: 0.68
+    },
+    9.5: {
+        1: 0.978, 2: 0.939, 3: 0.907, 4: 0.878, 5: 0.85, 6: 0.824, 7:
+        0.799, 8: 0.774, 9: 0.751, 10: 0.723, 11: 0.694, 12: 0.667
+    },
+    9.0: {
+        1: 0.955, 2: 0.922, 3: 0.892, 4: 0.863, 5: 0.837, 6: 0.811, 7:
+        0.786, 8: 0.762, 9: 0.739, 10: 0.707, 11: 0.68, 12: 0.653
+    },
+    8.5: {
+        1: 0.939, 2: 0.907, 3: 0.878, 4: 0.85, 5: 0.824, 6: 0.799, 7:
+        0.774, 8: 0.751, 9: 0.723, 10: 0.694, 11: 0.667, 12: 0.64
+    },
+    8.0: {
+        1: 0.922, 2: 0.892, 3: 0.863, 4: 0.837, 5: 0.811, 6: 0.786, 7:
+        0.762, 8: 0.739, 9: 0.707, 10: 0.68, 11: 0.653, 12: 0.626
+    },
+    7.5: {
+        1: 0.907, 2: 0.878, 3: 0.85, 4: 0.824, 5: 0.799, 6: 0.774, 7:
+        0.751, 8: 0.723, 9: 0.694, 10: 0.667, 11: 0.64, 12: 0.613
+    },
+    7.0: {
+        1: 0.892, 2: 0.863, 3: 0.837, 4: 0.811, 5: 0.786, 6: 0.762, 7:
+        0.739, 8: 0.707, 9: 0.68, 10: 0.653, 11: 0.626, 12: 0.599
+    },
+    6.5: {
+        1: 0.878, 2: 0.85, 3: 0.824, 4: 0.799, 5: 0.774, 6: 0.751, 7:
+        0.723, 8: 0.694, 9: 0.667, 10: 0.64, 11: 0.613, 12: 0.586
+    },
+    6.0: {
+        1: 0.863, 2: 0.837, 3: 0.811, 4: 0.786, 5: 0.762, 6: 0.739, 7:
+        0.707, 8: 0.68, 9: 0.653, 10: 0.626, 11: 0.599, 12: 0.574
+    },
+    5.5: {
+        1: 0.85, 2: 0.824, 3: 0.799, 4: 0.774, 5: 0.751, 6: 0.723, 7:
+        0.694, 8: 0.667, 9: 0.64, 10: 0.613, 11: 0.586, 12: 0.561
+    },
+    5.0: {
+        1: 0.837, 2: 0.811, 3: 0.786, 4: 0.762, 5: 0.739, 6: 0.707, 7:
+        0.68, 8: 0.653, 9: 0.626, 10: 0.599, 11: 0.574, 12: 0.547
+    },
+}
+
+MIN_REPS = 1
+MAX_REPS = 12
+
+
+def percentage(reps: int, rpe: float) -> float:
+    """Que fraccion del 1RM representa hacer 'reps' a ese 'rpe'.
+
+    Ejemplo: 5 repeticiones a RPE 8 son el 0.811 del maximo.
+    """
+    if not MIN_REPS <= reps <= MAX_REPS:
+        raise ValueError(f"reps fuera de la tabla: {reps} (1..12)")
+    if rpe not in RPE_CHART:
+        raise ValueError(f"rpe fuera de la tabla: {rpe} (5..10, de 0.5)")
+    return RPE_CHART[rpe][reps]
+
+
+def estimated_1rm(weight: float, reps: int, rpe: float) -> float:
+    """1RM estimado a partir de una serie realizada.
+
+    Mucho mas fiable que la formula de Epley, porque tiene en cuenta
+    cuanto esfuerzo costo la serie (el RPE), no solo peso y reps.
+    """
+    return round(weight / percentage(reps, rpe), 1)
+
+
+def weight_for(one_rm: float, reps: int, rpe: float) -> float:
+    """Que peso poner para hacer 'reps' a ese 'rpe'.
+
+    La operacion inversa, y la que usa el coach al programar:
+    "quiero 5 a RPE 8" -> el peso sale solo.
+    """
+    return round(one_rm * percentage(reps, rpe), 1)
