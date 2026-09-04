@@ -1,13 +1,31 @@
+-- =============================================================
+--  ParaBellum · esquema completo (PostgreSQL / Supabase)
+--
+--  Este fichero es el estado actual de la base de datos, entero.
+--  Ejecutarlo en una base vacia la deja lista.
+--
+--  OJO: empieza con DROP. Borra todos los datos.
+--
+--  A partir del primer atleta real, NADA se cambia aqui: cada cambio
+--  va como fichero numerado en migrations/, que se aplica sin borrar.
+-- =============================================================
 
 
-drop table if exists messages           cascade;
-drop table if exists set_logs           cascade;
-drop table if exists set_prescriptions  cascade;
-drop table if exists exercises          cascade;
+drop table if exists invitations          cascade;
+drop table if exists messages             cascade;
+drop table if exists set_logs             cascade;
+drop table if exists set_prescriptions    cascade;
+drop table if exists exercises            cascade;
 drop table if exists exercise_definitions cascade;
-drop table if exists workouts           cascade;
-drop table if exists blocks             cascade;
-drop table if exists profiles           cascade;
+drop table if exists workouts             cascade;
+drop table if exists blocks               cascade;
+drop table if exists athlete_profiles     cascade;
+drop table if exists profiles             cascade;
+
+
+-- -------------------------------------------------------------
+-- Personas
+-- -------------------------------------------------------------
 
 create table profiles (
     id           uuid        primary key references auth.users(id) on delete cascade,
@@ -20,9 +38,58 @@ create table profiles (
     weight_unit  text        not null default 'kg' check (weight_unit in ('kg', 'lb')),
     created_at   timestamptz not null default now(),
 
+    -- Un coach no puede tener coach.
     check (role = 'athlete' or coach_id is null)
 );
 
+
+create table athlete_profiles (
+    athlete_id     uuid primary key references profiles(id) on delete cascade,
+
+    birth_date     date,
+    phone          text,
+    city           text,
+    gender         text check (gender is null
+                               or gender in ('female', 'male', 'other')),
+    height_cm      numeric(5,1) check (height_cm is null
+                                       or height_cm between 100 and 250),
+    occupation     text,
+
+    training_since text,
+    sports         text,
+    injuries       text,
+    nutrition      text,
+    goals          text,
+    priorities     text,
+
+    best_squat     numeric(6,2) check (best_squat is null or best_squat > 0),
+    best_bench     numeric(6,2) check (best_bench is null or best_bench > 0),
+    best_deadlift  numeric(6,2) check (best_deadlift is null or best_deadlift > 0),
+
+    coach_note     text,   -- privada: el atleta no la ve
+
+    updated_at     timestamptz not null default now()
+);
+
+
+create table invitations (
+    id           bigint      generated always as identity primary key,
+    token        text        not null unique,
+    coach_id     uuid        not null references profiles(id) on delete cascade,
+    email        text,
+    name         text,
+    created_at   timestamptz not null default now(),
+    expires_at   timestamptz not null default now() + interval '30 days',
+    accepted_at  timestamptz,
+    accepted_by  uuid        references profiles(id) on delete set null,
+
+    check (expires_at > created_at)
+);
+
+
+-- -------------------------------------------------------------
+-- Entrenamiento
+-- -------------------------------------------------------------
 
 create table blocks (
     id           bigint  generated always as identity primary key,
@@ -35,6 +102,7 @@ create table blocks (
                          check (status in ('draft', 'active', 'completed')),
     notes        text,
 
+    -- start_date tiene que ser lunes. En Postgres: 0=domingo, 1=lunes.
     check (extract(dow from start_date) = 1)
 );
 
@@ -118,7 +186,12 @@ create table messages (
 );
 
 
+-- -------------------------------------------------------------
+-- Indices
+-- -------------------------------------------------------------
+
 create index idx_profiles_coach           on profiles (coach_id);
+create index idx_invitations_coach        on invitations (coach_id);
 create index idx_blocks_athlete           on blocks (athlete_id, status);
 create index idx_workouts_block           on workouts (block_id);
 create index idx_exercises_workout        on exercises (workout_id);
@@ -136,7 +209,18 @@ create unique index un_solo_bloque_activo_por_atleta
     where status = 'active';
 
 
+-- -------------------------------------------------------------
+-- Row Level Security
+--
+-- Supabase publica una API REST sobre estas tablas, y la clave publica
+-- va dentro del frontend. Con RLS activada y SIN politicas, esa clave
+-- no puede leer nada: solo la clave service_role, que usa el backend y
+-- nunca sale del servidor.
+-- -------------------------------------------------------------
+
 alter table profiles             enable row level security;
+alter table athlete_profiles     enable row level security;
+alter table invitations          enable row level security;
 alter table blocks               enable row level security;
 alter table workouts             enable row level security;
 alter table exercise_definitions enable row level security;
@@ -146,20 +230,52 @@ alter table set_logs             enable row level security;
 alter table messages             enable row level security;
 
 
+-- -------------------------------------------------------------
+-- Alta de usuarios
+--
+-- Supabase crea la fila en auth.users; este trigger crea su profile.
+-- Si el registro trae un token de invitacion valido, el atleta queda
+-- enganchado a su coach en la misma operacion: no hay ningun instante
+-- en que exista un perfil suelto.
+-- -------------------------------------------------------------
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+    v_token text := new.raw_user_meta_data ->> 'invitation_token';
+    v_coach uuid;
 begin
-    insert into public.profiles (id, name, email, role)
+    if v_token is not null then
+        select coach_id into v_coach
+        from public.invitations
+        where token = v_token
+          and accepted_at is null
+          and expires_at > now();
+    end if;
+
+    insert into public.profiles (id, name, email, role, coach_id, status)
     values (
         new.id,
         coalesce(new.raw_user_meta_data ->> 'name', 'Sin nombre'),
         new.email,
-        coalesce(new.raw_user_meta_data ->> 'role', 'athlete')
+        case
+            when v_coach is not null then 'athlete'
+            else coalesce(new.raw_user_meta_data ->> 'role', 'athlete')
+        end,
+        v_coach,
+        case when v_coach is not null then 'active' else 'pending' end
     );
+
+    if v_coach is not null then
+        update public.invitations
+        set accepted_at = now(), accepted_by = new.id
+        where token = v_token;
+    end if;
+
     return new;
 end;
 $$;
