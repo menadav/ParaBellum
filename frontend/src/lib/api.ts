@@ -4,7 +4,9 @@ import type {
   BlockCreate,
   Exercise,
   ExerciseDefinition,
+  PrescriptionIn,
   SetLog,
+  SetPrescription,
   User,
   Workout,
   WorkoutsGenerate,
@@ -59,6 +61,8 @@ const patch = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
 const put = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PUT", body: JSON.stringify(body) });
+const del = (path: string) =>
+  request<void>(path, { method: "DELETE" });
 
 export const api = {
   me: () => get<User>("/me"),
@@ -105,6 +109,19 @@ export const api = {
       set_number: setNumber,
       ...body,
     }),
+
+  deleteLog: (exerciseId: number, setNumber: number) =>
+    del(`/exercises/${exerciseId}/logs/${setNumber}`),
+
+  prescriptions: (workoutId: number) =>
+    get<SetPrescription[]>(`/workouts/${workoutId}/prescriptions`),
+  setPrescriptions: (exerciseId: number, sets: PrescriptionIn[]) =>
+    put<SetPrescription[]>(`/exercises/${exerciseId}/prescriptions`, {
+      sets,
+    }),
+
+  exerciseHistory: (exerciseId: number) =>
+    get<SetLog[]>(`/exercises/${exerciseId}/history`),
 
   health: () => get<{ status: string; database: string }>("/health"),
 };

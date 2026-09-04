@@ -73,6 +73,8 @@ export interface SetLog {
   rpe: number | null;
   completed_at: string | null;
   estimated_1rm: number | null;
+  /** Quien la escribio. Si no es el atleta, esta pendiente. */
+  logged_by: string | null;
 }
 
 export interface BlockCreate {
@@ -86,4 +88,20 @@ export interface BlockCreate {
 export interface WorkoutsGenerate {
   days: Weekday[];
   names?: string[] | null;
+}
+
+export interface SetPrescription {
+  id: number;
+  exercise_id: number;
+  set_number: number;
+  target_reps: number;
+  target_weight: number | null;
+  target_rpe: number | null;
+}
+
+export interface PrescriptionIn {
+  set_number: number;
+  target_reps: number;
+  target_weight?: number | null;
+  target_rpe?: number | null;
 }

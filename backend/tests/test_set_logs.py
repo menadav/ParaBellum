@@ -204,3 +204,48 @@ def test_borrar_el_ejercicio_se_lleva_sus_series(conn, exercise_id):
 def test_la_base_de_datos_rechaza_un_rpe_imposible(conn, exercise_id):
     with pytest.raises(psycopg.errors.CheckViolation):
         set_logs.upsert(conn, una_serie(exercise_id, rpe=15.0))
+
+
+def test_el_coach_tambien_puede_gestionar_las_series(conn, coach, athlete):
+    """Regla de negocio: el atleta registra, el coach puede corregir."""
+    from models import Block, BlockStatus
+    from services import access
+
+    bloque = Block(
+        id=1, name="x", coach_id=coach, athlete_id=athlete,
+        total_weeks=8, start_date=None, status=BlockStatus.ACTIVE,
+    )
+    from repositories import profiles
+
+    assert access.puede_gestionar_series(profiles.get_by_id(conn, coach), bloque)
+    assert access.puede_gestionar_series(
+        profiles.get_by_id(conn, athlete), bloque
+    )
+
+
+def test_la_serie_guarda_quien_la_escribio(conn, exercise_id, coach):
+    """El coach la deja planificada: queda firmada por el."""
+    set_logs.upsert(conn, SetLog(
+        id=0, exercise_id=exercise_id, set_number=1, reps=8,
+        weight=100.0, rpe=7.0, logged_by=coach,
+    ))
+
+    s = set_logs.list_for_exercise(conn, exercise_id)[0]
+    assert s.logged_by == coach
+
+
+def test_al_corregirla_cambia_la_firma(conn, exercise_id, coach, athlete):
+    """Es lo que distingue 'pendiente' de 'hecha'."""
+    set_logs.upsert(conn, SetLog(
+        id=0, exercise_id=exercise_id, set_number=1, reps=8,
+        weight=100.0, rpe=7.0, logged_by=coach,
+    ))
+
+    set_logs.upsert(conn, SetLog(
+        id=0, exercise_id=exercise_id, set_number=1, reps=8,
+        weight=102.5, rpe=8.0, logged_by=athlete,
+    ))
+
+    s = set_logs.list_for_exercise(conn, exercise_id)[0]
+    assert s.logged_by == athlete
+    assert s.weight == 102.5

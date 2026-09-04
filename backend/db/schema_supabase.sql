@@ -97,6 +97,7 @@ create table set_logs (
     weight           numeric(6,2) check (weight is null or weight >= 0),
     rpe              numeric(3,1) check (rpe is null or rpe between 1 and 10),
     prescription_id  bigint       references set_prescriptions(id) on delete set null,
+    logged_by        uuid         references profiles(id),  -- coach = pendiente
     completed_at     timestamptz  not null default now(),
 
     unique (exercise_id, set_number)
@@ -123,6 +124,7 @@ create index idx_exercises_workout        on exercises (workout_id);
 create index idx_exercises_definition     on exercises (definition_id);
 create index idx_set_logs_exercise        on set_logs (exercise_id);
 create index idx_set_logs_completed       on set_logs (completed_at);
+create index idx_set_logs_logged_by       on set_logs (logged_by);
 create index idx_messages_receiver_unread on messages (receiver_id, is_read);
 
 -- Un atleta solo puede tener UN bloque activo. Indice unico parcial:

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Weekday } from "../lib/types";
+import type { User, Weekday } from "../lib/types";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
@@ -15,6 +15,7 @@ export function BlockPage() {
   const { blockId = "" } = useParams();
   const id = Number(blockId);
   const [semana, setSemana] = useState(1);
+  const usuario = useOutletContext<User>();
   const qc = useQueryClient();
 
   const bloqueQ = useQuery({
@@ -83,6 +84,19 @@ export function BlockPage() {
         )}
       </nav>
 
+      {entrenos.length > 0 && (
+        <div className="leyenda">
+          <span>
+            <i className="hecha" />
+            Hecha por el atleta
+          </span>
+          <span>
+            <i className="pendiente" />
+            Pendiente, la dejó planificada el coach
+          </span>
+        </div>
+      )}
+
       {entrenosQ.isLoading ? (
         <Spinner />
       ) : entrenos.length === 0 ? (
@@ -95,9 +109,11 @@ export function BlockPage() {
             <WorkoutCard
               key={w.id}
               workout={w}
+              bloque={bloque}
               fecha={fechaDe(inicio, semana, w.day_of_week)}
               diaNombre={DIAS[w.day_of_week]}
               editable={bloque.status !== "completed"}
+              usuario={usuario}
             />
           ))}
         </div>

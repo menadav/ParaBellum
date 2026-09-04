@@ -247,3 +247,200 @@
 .buscador-lista button:hover {
   background: var(--surface);
 }
+
+/* ---------- Cuerpo del ejercicio ---------- */
+
+.ejercicio-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-left: 34px;
+}
+
+.ejercicio-cuerpo .series {
+  padding-left: 0;
+}
+
+/* ---------- Borrar una serie ---------- */
+
+.serie {
+  position: relative;
+}
+
+.serie.borrando {
+  opacity: 0.4;
+}
+
+.serie-borrar {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 3px;
+  margin-right: -4px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
+}
+
+.serie:hover .serie-borrar,
+.serie-borrar:focus-visible {
+  opacity: 1;
+}
+
+.serie-borrar:hover {
+  color: var(--danger);
+}
+
+/* En tactil no hay hover: la papelera se ve siempre. */
+@media (hover: none) {
+  .serie-borrar {
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Serie pulsable para editar ---------- */
+
+.serie-valores {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.serie-valores:disabled {
+  cursor: default;
+}
+
+.serie:has(.serie-valores:not(:disabled)):hover {
+  border-color: var(--line-strong);
+}
+
+.serie-form {
+  padding: 3px 6px;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+}
+
+/* ---------- Ultima vez ---------- */
+
+.ultima-vez {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ultima-tag {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.objetivo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 3px 9px;
+  border-radius: var(--r);
+  font-size: 0.8rem;
+}
+
+.objetivo.pasado {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+
+.objetivo-u {
+  font-size: 0.66rem;
+  color: var(--ink-3);
+}
+
+/* ---------- Contador de series iguales ---------- */
+
+.campo-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-3);
+}
+
+.input.sm.contador {
+  width: 38px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.serie-error {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
+/* ---------- Hecha por el atleta / pendiente ---------- */
+
+.serie.hecha {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.serie.hecha .serie-n {
+  color: var(--ok);
+}
+
+.serie.pendiente {
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--ink-3);
+}
+
+.serie.pendiente .num,
+.serie.pendiente .serie-u {
+  color: var(--ink-2);
+}
+
+.leyenda {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.leyenda i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+}
+
+.leyenda i.hecha {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.leyenda i.pendiente {
+  border-style: dashed;
+}

@@ -53,6 +53,7 @@ class SetLogOut(BaseModel):
     rpe: float | None
     completed_at: datetime.datetime | None
     estimated_1rm: float | None
+    logged_by: uuid.UUID | None
 
 
 class ExerciseOut(BaseModel):
@@ -158,3 +159,31 @@ class ProfileUpdate(BaseModel):
 
     name: str | None = Field(default=None, min_length=1, max_length=80)
     weight_unit: WeightUnit | None = None
+
+
+class SetPrescriptionOut(BaseModel):
+    """Lo que el coach manda hacer en una serie."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    exercise_id: int
+    set_number: int
+    target_reps: int
+    target_weight: float | None
+    target_rpe: float | None
+
+
+class PrescriptionIn(BaseModel):
+    """Una serie prescrita, tal como llega del formulario del coach."""
+
+    set_number: int = Field(ge=1)
+    target_reps: int = Field(ge=1)
+    target_weight: float | None = Field(default=None, gt=0)
+    target_rpe: float | None = Field(default=None, ge=1, le=10)
+
+
+class PrescriptionsReplace(BaseModel):
+    """El bloque entero de series de un ejercicio."""
+
+    sets: list[PrescriptionIn] = Field(max_length=20)

@@ -1,16 +1,26 @@
+/* Alineacion por flujo en linea: funciona aunque flex no llegue a aplicarse. */
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--sp-3);
+  text-align: right;
   margin-bottom: var(--sp-5);
+  line-height: 0;
+}
+
+.theme-toggle,
+.topbar-user {
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+  width: 34px;
+  height: 34px;
+}
+
+.topbar-user {
+  margin-left: var(--sp-2);
+  border-radius: 50%;
+  transition: box-shadow 0.12s ease;
 }
 
 .theme-toggle {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
   border-radius: var(--r);
   border: 1px solid var(--line);
   background: var(--surface);
@@ -28,6 +38,26 @@
   background: var(--surface-2);
 }
 
-.topbar-user {
-  display: flex;
+.topbar-user:hover .avatar,
+.topbar-user.active .avatar {
+  border-color: var(--ink-3);
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+/* Anillo cuando estas en Ajustes, para saber donde te ha llevado. */
+.topbar-user.active {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3px var(--line-strong);
+}
+
+.topbar-user .avatar {
+  width: 32px;
+  height: 32px;
+  line-height: 1;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
 }

@@ -18,14 +18,16 @@ from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
-    ExerciseOut, ProfileUpdate, SetLogCreate, SetLogOut, StatusUpdate,
-    UserOut,
+    ExerciseOut, PrescriptionsReplace, ProfileUpdate, SetLogCreate,
+    SetLogOut, SetPrescriptionOut, StatusUpdate, UserOut,
     WorkoutOut, WorkoutsGenerate,
 )
-from models import Block, BlockStatus, Exercise, SetLog, User
+from models import (
+    Block, BlockStatus, Exercise, SetLog, SetPrescription, User,
+)
 from repositories import blocks, exercises, profiles
 from repositories import exercise_definitions as defs
-from repositories import set_logs, workouts
+from repositories import set_logs, set_prescriptions, workouts
 from services import access, planning
 
 app = FastAPI(
@@ -370,10 +372,8 @@ def registrar_serie(
         raise HTTPException(404, "Ese ejercicio no existe")
 
     bloque = _bloque_visible(conn, fila["block_id"], usuario)
-    if not access.puede_registrar_en_bloque(usuario, bloque):
-        raise HTTPException(
-            403, "Solo el atleta del bloque registra sus series"
-        )
+    if not access.puede_gestionar_series(usuario, bloque):
+        raise HTTPException(403, "Este entreno no es tuyo")
 
     set_logs.upsert(conn, SetLog(
         id=0,
@@ -383,6 +383,119 @@ def registrar_serie(
         weight=datos.weight,
         rpe=datos.rpe,
         prescription_id=datos.prescription_id,
+        logged_by=usuario.id,
     ))
     return [s for s in set_logs.list_for_exercise(conn, exercise_id)
             if s.set_number == set_number][0]
+
+
+# ---------------------------------------------------------------------
+# Series prescritas: lo que el coach manda hacer
+# ---------------------------------------------------------------------
+
+
+def _bloque_del_ejercicio(
+    conn: psycopg.Connection, exercise_id: int
+) -> int:
+    """El bloque al que pertenece un ejercicio, subiendo por la cadena."""
+    fila = conn.execute(
+        "select w.block_id from exercises e "
+        "join workouts w on w.id = e.workout_id "
+        "where e.id = %s",
+        (exercise_id,),
+    ).fetchone()
+    if fila is None:
+        raise HTTPException(404, "Ese ejercicio no existe")
+    return fila["block_id"]
+
+
+@app.get("/workouts/{workout_id}/prescriptions", tags=["series"])
+def listar_prescripciones(
+    workout_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[SetPrescriptionOut]:
+    """Lo prescrito en todo el entreno, de una sola consulta."""
+    entreno = workouts.get_by_id(conn, workout_id)
+    if entreno is None:
+        raise HTTPException(404, "Ese entreno no existe")
+    _bloque_visible(conn, entreno.block_id, usuario)
+    return set_prescriptions.list_for_workout(conn, workout_id)
+
+
+@app.put("/exercises/{exercise_id}/prescriptions", tags=["series"])
+def prescribir_series(
+    exercise_id: int,
+    datos: PrescriptionsReplace,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[SetPrescriptionOut]:
+    """El coach define las series de un ejercicio: 4x8 a RPE 7, etc.
+
+    PUT porque sustituye el bloque entero de series, no anade una.
+    """
+    block_id = _bloque_del_ejercicio(conn, exercise_id)
+    _bloque_editable(conn, block_id, usuario)
+
+    set_prescriptions.replace_for_exercise(conn, exercise_id, [
+        SetPrescription(
+            id=0,
+            exercise_id=exercise_id,
+            set_number=s.set_number,
+            target_reps=s.target_reps,
+            target_weight=s.target_weight,
+            target_rpe=s.target_rpe,
+        )
+        for s in datos.sets
+    ])
+    return set_prescriptions.list_for_exercise(conn, exercise_id)
+
+
+@app.delete("/exercises/{exercise_id}/logs/{set_number}",
+            status_code=204, tags=["series"])
+def borrar_serie(
+    exercise_id: int,
+    set_number: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    """El atleta borra una serie que registro por error."""
+    block_id = _bloque_del_ejercicio(conn, exercise_id)
+    bloque = _bloque_visible(conn, block_id, usuario)
+    if not access.puede_gestionar_series(usuario, bloque):
+        raise HTTPException(403, "Este entreno no es tuyo")
+
+    serie = next(
+        (s for s in set_logs.list_for_exercise(conn, exercise_id)
+         if s.set_number == set_number),
+        None,
+    )
+    if serie is None:
+        raise HTTPException(404, "Esa serie no existe")
+    set_logs.delete(conn, serie.id)
+
+
+@app.get("/exercises/{exercise_id}/history", tags=["series"])
+def historial_del_ejercicio(
+    exercise_id: int,
+    limit: int = 12,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[SetLogOut]:
+    """Lo que el atleta levanto las ultimas veces en este ejercicio.
+
+    Sirve de referencia al programar y al entrenar: cruza cuatro tablas
+    para ir del ejercicio de hoy a todo su historico.
+    """
+    block_id = _bloque_del_ejercicio(conn, exercise_id)
+    bloque = _bloque_visible(conn, block_id, usuario)
+
+    fila = conn.execute(
+        "select definition_id from exercises where id = %s",
+        (exercise_id,),
+    ).fetchone()
+
+    historico = set_logs.history(
+        conn, bloque.athlete_id, fila["definition_id"], limit
+    )
+    return [s for s in historico if s.exercise_id != exercise_id]

@@ -6,7 +6,7 @@ from models import SetLog
 
 _COLUMNS = (
     "id, exercise_id, set_number, reps, weight, rpe, "
-    "prescription_id, completed_at"
+    "prescription_id, completed_at, logged_by"
 )
 
 _COLUMNS_SL = ", ".join(f"sl.{c}" for c in _COLUMNS.split(", "))
@@ -27,19 +27,22 @@ def _row_to_set_log(row: dict) -> SetLog:
         rpe=_a_float(row["rpe"]),
         prescription_id=row["prescription_id"],
         completed_at=row["completed_at"],
+        logged_by=row["logged_by"],
     )
 
 
 def upsert(conn: psycopg.Connection, log: SetLog) -> int:
     row = conn.execute(
         "insert into set_logs "
-        "(exercise_id, set_number, reps, weight, rpe, prescription_id) "
-        "values (%s, %s, %s, %s, %s, %s) "
+        "(exercise_id, set_number, reps, weight, rpe, prescription_id, "
+        " logged_by) "
+        "values (%s, %s, %s, %s, %s, %s, %s) "
         "on conflict (exercise_id, set_number) do update set "
         "    reps = excluded.reps, "
         "    weight = excluded.weight, "
         "    rpe = excluded.rpe, "
         "    prescription_id = excluded.prescription_id, "
+        "    logged_by = excluded.logged_by, "
         "    completed_at = now() "
         "returning id",
         (
@@ -49,6 +52,7 @@ def upsert(conn: psycopg.Connection, log: SetLog) -> int:
             log.weight,
             log.rpe,
             log.prescription_id,
+            log.logged_by,
         ),
     ).fetchone()
     return row["id"]

@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import { useTheme } from "../theme";
 import type { User } from "../lib/types";
 import { iniciales } from "./Sidebar";
@@ -5,11 +6,16 @@ import "./topbar.css";
 
 export function TopBar({ usuario }: { usuario: User }) {
   return (
-    <header className="topbar">
+    <header className="topbar" style={{ textAlign: "right" }}>
       <ThemeToggle />
-      <span className="topbar-user" title={usuario.email}>
+      <NavLink
+        to="/ajustes"
+        className="topbar-user"
+        title={`${usuario.name} · ir a Ajustes`}
+        aria-label="Ir a Ajustes"
+      >
         <span className="avatar">{iniciales(usuario.name)}</span>
-      </span>
+      </NavLink>
     </header>
   );
 }
@@ -35,7 +41,13 @@ function ThemeToggle() {
       title={titulo}
       aria-label={`Tema: ${titulo}. Pulsa para cambiar.`}
     >
-      {tema === "system" ? <IconAuto /> : efectivo === "dark" ? <IconLuna /> : <IconSol />}
+      {tema === "system" ? (
+        <IconAuto />
+      ) : efectivo === "dark" ? (
+        <IconLuna />
+      ) : (
+        <IconSol />
+      )}
     </button>
   );
 }

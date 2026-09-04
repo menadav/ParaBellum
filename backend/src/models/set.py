@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from dataclasses import dataclass
 from typing import Optional
 
@@ -27,6 +28,8 @@ class SetLog:
     rpe: Optional[float] = None
     prescription_id: Optional[int] = None
     completed_at: Optional[datetime.datetime] = None
+    # Quien la escribio. Si es el coach, esta pendiente de hacer.
+    logged_by: Optional[uuid.UUID] = None
 
     @property
     def estimated_1rm(self) -> Optional[float]:
