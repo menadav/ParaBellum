@@ -28,7 +28,7 @@ export function SettingsPage() {
       </div>
 
       <Perfil usuario={usuario} />
-      <CambiarPassword />
+      <CambiarPassword usuario={usuario} />
       <Preferencias usuario={usuario} />
 
       <section className="card">

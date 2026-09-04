@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import type { User } from "../lib/types";
 import { ErrorBox } from "../components/UI";
 
-// El cambio va directo a Supabase Auth, no a nuestra API: la contrasena
-// nunca pasa por nuestro servidor ni la vemos.
-export function CambiarPassword() {
+// Todo va directo a Supabase Auth: nuestra API no ve nunca la contrasena.
+export function CambiarPassword({ usuario }: { usuario: User }) {
+  const [actual, setActual] = useState("");
   const [nueva, setNueva] = useState("");
   const [repetida, setRepetida] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +14,12 @@ export function CambiarPassword() {
 
   const corta = nueva.length > 0 && nueva.length < 8;
   const distintas = repetida.length > 0 && nueva !== repetida;
-  const valida = nueva.length >= 8 && nueva === repetida;
+  const igualQueLaActual = nueva.length > 0 && nueva === actual;
+  const valida =
+    actual.length > 0 &&
+    nueva.length >= 8 &&
+    nueva === repetida &&
+    !igualQueLaActual;
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -21,13 +27,30 @@ export function CambiarPassword() {
     setHecho(false);
     setEnviando(true);
 
-    const { error } = await supabase.auth.updateUser({ password: nueva });
-
-    setEnviando(false);
-    if (error) {
-      setError(traducir(error.message));
+    // 1. Comprobar que quien pide el cambio sabe la contraseña actual.
+    //    Tener la sesion abierta no basta: si alguien se sienta en tu
+    //    ordenador desbloqueado no puede dejarte fuera de tu cuenta.
+    const { error: malActual } = await supabase.auth.signInWithPassword({
+      email: usuario.email,
+      password: actual,
+    });
+    if (malActual) {
+      setEnviando(false);
+      setError("La contraseña actual no es correcta.");
       return;
     }
+
+    // 2. Ahora si, cambiarla.
+    const { error: alCambiar } = await supabase.auth.updateUser({
+      password: nueva,
+    });
+
+    setEnviando(false);
+    if (alCambiar) {
+      setError(traducir(alCambiar.message));
+      return;
+    }
+    setActual("");
     setNueva("");
     setRepetida("");
     setHecho(true);
@@ -51,6 +74,17 @@ export function CambiarPassword() {
         </div>
 
         <label className="field">
+          <span className="label">Contraseña actual</span>
+          <input
+            className="input"
+            type="password"
+            autoComplete="current-password"
+            value={actual}
+            onChange={(e) => setActual(e.target.value)}
+          />
+        </label>
+
+        <label className="field">
           <span className="label">Nueva contraseña</span>
           <input
             className="input"
@@ -63,6 +97,11 @@ export function CambiarPassword() {
           {corta && (
             <span className="pista error">
               Tiene que tener al menos 8 caracteres.
+            </span>
+          )}
+          {igualQueLaActual && (
+            <span className="pista error">
+              La nueva tiene que ser distinta de la actual.
             </span>
           )}
         </label>
