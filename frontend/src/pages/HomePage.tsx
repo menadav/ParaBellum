@@ -31,7 +31,12 @@ export function HomePage() {
     <div className="page">
       <div className="page-head">
         <div className="page-title">
-          <h1>Hola, {usuario.name.split(" ")[0]}</h1>
+          <div className="row" style={{ gap: "var(--sp-3)" }}>
+            <h1>Hola, {usuario.name.split(" ")[0]}</h1>
+            <span className={`rol ${esCoach ? "coach" : "atleta"}`}>
+              {esCoach ? "Entrenador" : "Atleta"}
+            </span>
+          </div>
           <p>
             {esCoach
               ? `${atletas.length} atleta${atletas.length === 1 ? "" : "s"} a tu cargo`

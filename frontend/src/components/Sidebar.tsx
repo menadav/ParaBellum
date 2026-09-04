@@ -78,6 +78,16 @@ export function Sidebar({ usuario }: { usuario: User }) {
           </ul>
         </div>
       )}
+
+      <NavLink to="/ajustes" className="sidebar-yo">
+        <span className="avatar">{iniciales(usuario.name)}</span>
+        <span className="stack" style={{ minWidth: 0 }}>
+          <span className="sidebar-athlete-name">{usuario.name}</span>
+          <span className={`rol ${esCoach ? "coach" : "atleta"}`}>
+            {esCoach ? "Entrenador" : "Atleta"}
+          </span>
+        </span>
+      </NavLink>
     </aside>
   );
 }

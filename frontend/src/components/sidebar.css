@@ -157,3 +157,43 @@
   font-size: 0.8rem;
   color: var(--ink-3);
 }
+
+
+/* ---------- Quien eres, al pie ---------- */
+
+.sidebar-yo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: auto;
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--line);
+  transition: background 0.12s ease;
+}
+
+.sidebar-yo:hover {
+  background: var(--surface-2);
+}
+
+.rol {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rol.coach {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.rol.atleta {
+  background: var(--surface-2);
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+}

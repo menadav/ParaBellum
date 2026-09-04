@@ -65,8 +65,14 @@ def require_coach(
     usuario: User = Depends(get_current_user),
 ) -> User:
     if usuario.role is not Role.COACH:
+        # Decir CON QUE cuenta ha entrado: el caso real no es que no
+        # tenga permiso, es que se ha equivocado de cuenta.
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo un coach puede hacer esto",
+            detail=(
+                f"Has entrado como atleta ({usuario.email}). Esto solo "
+                "lo puede hacer un entrenador: sal y entra con tu "
+                "cuenta de coach."
+            ),
         )
     return usuario
