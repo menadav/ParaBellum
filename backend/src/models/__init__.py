@@ -3,6 +3,7 @@ from .block import Block, BlockStatus, Weekday
 from .exercise import Exercise, ExerciseDefinition
 from .invitation import Invitation
 from .message import Message
+from .notification import Notification, NotificationKind
 from .set import SetLog, SetPrescription
 from .user import AthleteStatus, Role, User, WeightUnit
 from .workout import Workout, WorkoutStatus
@@ -17,6 +18,8 @@ __all__ = [
     "Gender",
     "Invitation",
     "Message",
+    "Notification",
+    "NotificationKind",
     "Role",
     "SetLog",
     "SetPrescription",

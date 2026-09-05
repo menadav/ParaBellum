@@ -12,6 +12,7 @@
 
 
 drop table if exists invitations          cascade;
+drop table if exists notifications        cascade;
 drop table if exists messages             cascade;
 drop table if exists set_logs             cascade;
 drop table if exists set_prescriptions    cascade;
@@ -199,6 +200,27 @@ create index idx_exercises_definition     on exercises (definition_id);
 create index idx_set_logs_exercise        on set_logs (exercise_id);
 create index idx_set_logs_completed       on set_logs (completed_at);
 create index idx_set_logs_logged_by       on set_logs (logged_by);
+-- Avisos del coach a sus atletas. Los ve el atleta al entrar en la app.
+-- Un envio a varios atletas es una fila por atleta, unidas por "batch":
+-- asi el estado de leido vive en la fila y no hace falta ninguna tabla
+-- intermedia. Con 50 atletas un envio general son 50 filas.
+create table notifications (
+    id           bigint      generated always as identity primary key,
+    coach_id     uuid        not null references profiles(id) on delete cascade,
+    athlete_id   uuid        not null references profiles(id) on delete cascade,
+    batch        uuid        not null,
+    kind         text        not null default 'info'
+                             check (kind in ('info', 'payment', 'warning')),
+    title        text        not null check (length(btrim(title)) between 1 and 120),
+    body         text        check (body is null or length(body) <= 1000),
+    created_at   timestamptz not null default now(),
+    read_at      timestamptz,
+    expires_at   timestamptz,
+
+    check (coach_id <> athlete_id),
+    check (expires_at is null or expires_at > created_at)
+);
+
 create index idx_messages_receiver_unread on messages (receiver_id, is_read);
 
 -- Un atleta solo puede tener UN bloque activo. Indice unico parcial:
@@ -218,6 +240,11 @@ create unique index un_solo_bloque_activo_por_atleta
 -- nunca sale del servidor.
 -- -------------------------------------------------------------
 
+create index idx_notifications_pendientes
+    on notifications (athlete_id, created_at desc) where read_at is null;
+create index idx_notifications_enviadas
+    on notifications (coach_id, created_at desc);
+
 alter table profiles             enable row level security;
 alter table athlete_profiles     enable row level security;
 alter table invitations          enable row level security;
@@ -228,6 +255,7 @@ alter table exercises            enable row level security;
 alter table set_prescriptions    enable row level security;
 alter table set_logs             enable row level security;
 alter table messages             enable row level security;
+alter table notifications        enable row level security;
 
 
 -- -------------------------------------------------------------

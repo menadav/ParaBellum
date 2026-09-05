@@ -121,3 +121,34 @@ def set_video_required(
         "where exercise_id = %s and set_number = %s",
         (requerido, exercise_id, set_number),
     )
+
+
+def list_for_block(
+    conn: psycopg.Connection, block_id: int
+) -> list[SetLog]:
+    filas = conn.execute(
+        f"select {_COLUMNS_SL} from set_logs sl "
+        "join exercises e on e.id = sl.exercise_id "
+        "join workouts  w on w.id = e.workout_id "
+        "where w.block_id = %s "
+        "order by w.week_number, w.day_of_week, e.position, sl.set_number",
+        (block_id,),
+    ).fetchall()
+    return [_row_to_set_log(row) for row in filas]
+
+
+def import_many(
+    conn: psycopg.Connection,
+    exercise_id: int,
+    filas: list[tuple],
+) -> None:
+    # (set_number, reps, weight, rpe, completed_at) de datos historicos:
+    # la fecha viene del Excel, no de now().
+    with conn.cursor() as cur:
+        cur.executemany(
+            "insert into set_logs "
+            "(exercise_id, set_number, reps, weight, rpe, completed_at) "
+            "values (%s, %s, %s, %s, %s, %s) "
+            "on conflict (exercise_id, set_number) do nothing",
+            [(exercise_id, *fila) for fila in filas],
+        )

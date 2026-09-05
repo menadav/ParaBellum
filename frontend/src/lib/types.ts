@@ -159,3 +159,26 @@ export interface BlockStats {
   exercises: number;
   logs: number;
 }
+
+export type NotificationKind = "info" | "payment" | "warning";
+
+export interface Notification {
+  id: number;
+  kind: NotificationKind;
+  title: string;
+  body: string | null;
+  created_at: string | null;
+  read_at: string | null;
+  expires_at: string | null;
+}
+
+export interface NotificationSent {
+  batch: string;
+  kind: NotificationKind;
+  title: string;
+  body: string | null;
+  created_at: string;
+  expires_at: string | null;
+  total: number;
+  leidos: number;
+}

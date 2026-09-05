@@ -101,3 +101,17 @@ def update(
         "where id = %s",
         (notes, superset_group, exercise_id),
     )
+
+
+def list_for_block(
+    conn: psycopg.Connection, block_id: int
+) -> list[Exercise]:
+    # Todos los del bloque de una consulta, para exportar sin N+1.
+    filas = conn.execute(
+        f"select {', '.join('e.' + c for c in _COLUMNS.split(', '))} "
+        "from exercises e join workouts w on w.id = e.workout_id "
+        "where w.block_id = %s "
+        "order by w.week_number, w.day_of_week, e.position",
+        (block_id,),
+    ).fetchall()
+    return [_row_to_exercise(row) for row in filas]

@@ -6,6 +6,9 @@ import type {
   BlockStats,
   DefinitionIn,
   Invitation,
+  Notification,
+  NotificationKind,
+  NotificationSent,
   BlockCreate,
   Exercise,
   ExerciseDefinition,
@@ -67,6 +70,29 @@ const put = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PUT", body: JSON.stringify(body) });
 const del = (path: string) =>
   request<void>(path, { method: "DELETE" });
+
+
+async function descargar(path: string, porDefecto: string): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  const res = await fetch(`${BASE}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => null);
+    throw new ApiError(res.status, mensajeDeError(cuerpo, res.status));
+  }
+
+  const nombre =
+    res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ??
+    porDefecto;
+  const enlace = document.createElement("a");
+  enlace.href = URL.createObjectURL(await res.blob());
+  enlace.download = nombre;
+  enlace.click();
+  URL.revokeObjectURL(enlace.href);
+}
 
 export const api = {
   me: () => get<User>("/me"),
@@ -172,6 +198,21 @@ export const api = {
   createInvitation: (body: { name?: string | null; email?: string | null }) =>
     post<Invitation>("/me/invitations", body),
   deleteInvitation: (id: number) => del(`/me/invitations/${id}`),
+
+  exportBlock: (blockId: number) =>
+    descargar(`/blocks/${blockId}/export.xlsx`, "bloque.xlsx"),
+
+  notifications: () => get<Notification[]>("/me/notifications"),
+  readNotification: (id: number) =>
+    post<{ ok: boolean }>(`/notifications/${id}/read`, {}),
+  sentNotifications: () => get<NotificationSent[]>("/me/notifications/sent"),
+  sendNotification: (body: {
+    athlete_ids: string[] | null;
+    kind: NotificationKind;
+    title: string;
+    body: string | null;
+  }) => post<NotificationSent>("/me/notifications", body),
+  deleteNotification: (batch: string) => del(`/me/notifications/${batch}`),
 
   health: () => get<{ status: string; database: string }>("/health"),
 };

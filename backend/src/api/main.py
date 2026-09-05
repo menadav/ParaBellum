@@ -1,9 +1,10 @@
 
+import datetime
 import os
 import uuid
 
 import psycopg
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.auth import get_current_user, require_coach
@@ -12,6 +13,7 @@ from api.schemas import (
     AthleteProfileIn, AthleteProfileOut, BlockStats, BlockUpdate,
     DefinitionIn,
     InvitationIn, InvitationOut, InvitationPublic,
+    NotificationIn, NotificationOut, NotificationSent,
     ExerciseUpdate,
     ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
     BlockCreate, BlockOut, ExerciseCreate, ExerciseDefinitionOut,
@@ -21,13 +23,14 @@ from api.schemas import (
 )
 from models import (
     AthleteProfile, Block, BlockStatus, Exercise, ExerciseDefinition,
+    Notification, NotificationKind,
     SetLog, SetPrescription, User, Workout, WorkoutStatus,
 )
 from repositories import athlete_profiles, blocks, exercises
-from repositories import invitations, profiles
+from repositories import invitations, notifications, profiles
 from repositories import exercise_definitions as defs
 from repositories import set_logs, set_prescriptions, workouts
-from services import access, planning
+from services import access, export, planning
 
 app = FastAPI(
     title="ParaBellum Coaching",
@@ -902,3 +905,125 @@ def borrar_bloque(
     # El aviso lo da la interfaz; aqui solo se comprueba que es tuyo.
     _bloque_editable(conn, block_id, usuario)
     blocks.delete(conn, block_id)
+
+
+@app.get("/blocks/{block_id}/export.xlsx", tags=["bloques"])
+def exportar_bloque(
+    block_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> Response:
+    # El atleta se lleva su historico; el coach, el de cualquiera suyo.
+    bloque = _bloque_visible(conn, block_id, usuario)
+    atleta = profiles.get_by_id(conn, bloque.athlete_id)
+    if atleta is None:
+        raise HTTPException(404, "Ese bloque no tiene atleta")
+
+    entrenos = workouts.list_for_block(conn, block_id)
+    ejercicios = exercises.list_for_block(conn, block_id)
+    series = set_logs.list_for_block(conn, block_id)
+    definiciones = defs.list_by_ids(
+        conn, sorted({e.definition_id for e in ejercicios})
+    )
+
+    contenido = export.libro_de_bloque(
+        bloque, atleta, entrenos, ejercicios, definiciones, series
+    )
+    nombre = export.nombre_de_fichero(bloque, atleta)
+    return Response(
+        content=contenido,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        headers={
+            "Content-Disposition": f'attachment; filename="{nombre}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+# ---------------------------------------------------------------------
+# Avisos del coach a sus atletas
+# ---------------------------------------------------------------------
+
+@app.post("/me/notifications", status_code=201, tags=["avisos"])
+def enviar_aviso(
+    datos: NotificationIn,
+    usuario: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> NotificationSent:
+    mios = {a.id: a for a in profiles.list_athletes(conn, usuario.id)}
+    if datos.athlete_ids:
+        ajenos = [a for a in datos.athlete_ids if a not in mios]
+        if ajenos:
+            raise HTTPException(403, "Solo puedes avisar a tus atletas")
+        destinatarios = list(datos.athlete_ids)
+    else:
+        destinatarios = list(mios)
+
+    if not destinatarios:
+        raise HTTPException(422, "No tienes atletas a los que avisar")
+
+    batch = notifications.send(
+        conn, usuario.id, destinatarios, NotificationKind(datos.kind),
+        datos.title, datos.body, datos.expires_at,
+    )
+    return NotificationSent(
+        batch=batch, kind=datos.kind, title=datos.title, body=datos.body,
+        created_at=datetime.datetime.now(datetime.timezone.utc),
+        expires_at=datos.expires_at, total=len(destinatarios), leidos=0,
+    )
+
+
+@app.get("/me/notifications", tags=["avisos"])
+def mis_avisos(
+    todos: bool = False,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[NotificationOut]:
+    avisos = (
+        notifications.list_for_athlete(conn, usuario.id) if todos
+        else notifications.pending_for(conn, usuario.id)
+    )
+    return [NotificationOut(**vars(a) | {"kind": a.kind.value}) for a in avisos]
+
+
+@app.post("/notifications/{notification_id}/read", tags=["avisos"])
+def marcar_aviso_leido(
+    notification_id: int,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> dict:
+    if not notifications.mark_read(conn, notification_id, usuario.id):
+        raise HTTPException(404, "Ese aviso no existe o ya estaba leido")
+    return {"ok": True}
+
+
+@app.post("/me/notifications/read-all", tags=["avisos"])
+def marcar_todos_leidos(
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> dict:
+    return {"marcados": notifications.mark_all_read(conn, usuario.id)}
+
+
+@app.get("/me/notifications/sent", tags=["avisos"])
+def avisos_enviados(
+    usuario: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[NotificationSent]:
+    return [
+        NotificationSent(**{k: fila[k] for k in NotificationSent.model_fields})
+        for fila in notifications.sent_by(conn, usuario.id)
+    ]
+
+
+@app.delete("/me/notifications/{batch}", status_code=204, tags=["avisos"])
+def retirar_aviso(
+    batch: uuid.UUID,
+    usuario: User = Depends(require_coach),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    if notifications.delete_batch(conn, batch, usuario.id) == 0:
+        raise HTTPException(404, "Ese aviso no existe")

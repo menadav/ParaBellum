@@ -95,3 +95,15 @@ def update(
             definition.id,
         ),
     )
+
+
+def list_by_ids(
+    conn: psycopg.Connection, definition_ids: list[int]
+) -> list[ExerciseDefinition]:
+    if not definition_ids:
+        return []
+    filas = conn.execute(
+        f"select {_COLUMNS} from exercise_definitions where id = any(%s)",
+        (definition_ids,),
+    ).fetchall()
+    return [_row_to_definition(row) for row in filas]

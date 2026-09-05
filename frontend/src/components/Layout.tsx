@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { Avisos } from "./Avisos";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ErrorBox, Spinner } from "./UI";
@@ -29,6 +30,7 @@ export function Layout() {
       <Sidebar usuario={usuario} />
       <main className="app-main">
         <TopBar usuario={usuario} />
+        <Avisos />
         <Outlet context={usuario} />
       </main>
     </div>

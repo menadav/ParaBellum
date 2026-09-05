@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import type { Block } from "../lib/types";
 import { iniciales } from "../components/Sidebar";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
+import { EnviarAviso } from "./EnviarAviso";
 import { InvitacionesCard } from "./InvitacionesCard";
 import "./athletes.css";
 
@@ -37,6 +38,7 @@ export function AthletesPage() {
       </div>
 
       <InvitacionesCard />
+      <EnviarAviso />
 
       <section className="card">
         {atletas.length === 0 ? (

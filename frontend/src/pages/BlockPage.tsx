@@ -65,8 +65,10 @@ export function BlockPage() {
           </p>
         </div>
 
-        {esCoach && (
-          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+        <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+          <BotonExportar blockId={id} />
+          {esCoach && (
+            <>
             <button
               className="btn ghost"
               onClick={() => setAjustes((v) => !v)}
@@ -101,8 +103,9 @@ export function BlockPage() {
                 </button>
               </>
             )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {cambiarEstado.error && <ErrorBox error={cambiarEstado.error} />}
@@ -407,5 +410,25 @@ function SemanasDelBloque({
         </span>
       )}
     </span>
+  );
+}
+
+
+function BotonExportar({ blockId }: { blockId: number }) {
+  const descarga = useMutation({ mutationFn: () => api.exportBlock(blockId) });
+
+  return (
+    <>
+      <button
+        className="btn ghost"
+        disabled={descarga.isPending}
+        onClick={() => descarga.mutate()}
+        title="Descarga todas las series de este bloque en Excel"
+      >
+        <Icon name="download" size={15} />
+        {descarga.isPending ? "Preparando…" : "Excel"}
+      </button>
+      {descarga.error && <ErrorBox error={descarga.error} />}
+    </>
   );
 }

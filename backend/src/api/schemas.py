@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from models import (
     AthleteStatus, BlockStatus, Gender, Role, Weekday, WeightUnit,
@@ -293,3 +294,33 @@ class BlockStats(BaseModel):
     workouts: int
     exercises: int
     logs: int
+
+
+class NotificationIn(BaseModel):
+    # athlete_ids vacio o ausente = a todos mis atletas.
+    athlete_ids: list[uuid.UUID] | None = None
+    kind: Literal["info", "payment", "warning"] = "info"
+    title: str = Field(min_length=1, max_length=120)
+    body: str | None = Field(default=None, max_length=1000)
+    expires_at: datetime.datetime | None = None
+
+
+class NotificationOut(BaseModel):
+    id: int
+    kind: str
+    title: str
+    body: str | None
+    created_at: datetime.datetime | None
+    read_at: datetime.datetime | None
+    expires_at: datetime.datetime | None
+
+
+class NotificationSent(BaseModel):
+    batch: uuid.UUID
+    kind: str
+    title: str
+    body: str | None
+    created_at: datetime.datetime
+    expires_at: datetime.datetime | None
+    total: int
+    leidos: int
