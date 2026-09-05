@@ -15,6 +15,8 @@ import { AthletesPage } from "./pages/AthletesPage";
 import { BlockPage } from "./pages/BlockPage";
 import { HomePage } from "./pages/HomePage";
 import { InvitePage } from "./pages/InvitePage";
+import { LegalPage } from "./pages/legal/LegalPage";
+import { DOCUMENTOS } from "./pages/legal/textos";
 import { LibraryPage } from "./pages/LibraryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
@@ -41,8 +43,21 @@ export default function App() {
 function Rutas() {
   const { session, cargando } = useAuth();
 
+  const ruta = window.location.pathname;
+  const legal = DOCUMENTOS.find((d) => d.ruta === ruta);
+
+  // Los textos legales se leen SIN cuenta: un atleta que se lo esta
+  // pensando, o la AEPD mirando una reclamacion, no van a registrarse
+  // para leerlos. Van antes del login, igual que la invitacion.
+  if (legal)
+    return (
+      <Routes>
+        <Route path={legal.ruta} element={<LegalPage documento={legal} />} />
+      </Routes>
+    );
+
   // El enlace de invitacion se abre SIN cuenta: va antes que el login.
-  if (window.location.pathname.startsWith("/invitar/"))
+  if (ruta.startsWith("/invitar/"))
     return (
       <Routes>
         <Route path="/invitar/:token" element={<InvitePage />} />
@@ -67,6 +82,13 @@ function Rutas() {
         <Route path="/bloques/:blockId" element={<BlockPage />} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/ajustes" element={<SettingsPage />} />
+        {DOCUMENTOS.map((d) => (
+          <Route
+            key={d.ruta}
+            path={d.ruta}
+            element={<LegalPage documento={d} />}
+          />
+        ))}
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

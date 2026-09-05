@@ -39,6 +39,16 @@ create table profiles (
     weight_unit  text        not null default 'kg' check (weight_unit in ('kg', 'lb')),
     created_at   timestamptz not null default now(),
 
+    -- Que version de los textos legales acepto y cuando. Guardar la
+    -- version importa: cuando cambien, hay que poder demostrar a que
+    -- dijo que si cada uno. Un booleano no serviria de nada.
+    terms_version      text,
+    terms_accepted_at  timestamptz,
+    -- Consentimiento aparte para los datos de salud (lesiones, peso).
+    -- El RGPD los trata como categoria especial y exige que sea
+    -- especifico para esa finalidad, no metido en el mismo saco.
+    health_consent_at  timestamptz,
+
     -- Un coach no puede tener coach.
     check (role = 'athlete' or coach_id is null)
 );
@@ -275,6 +285,8 @@ set search_path = ''
 as $$
 declare
     v_token text := new.raw_user_meta_data ->> 'invitation_token';
+    v_terms text := new.raw_user_meta_data ->> 'terms_version';
+    v_salud text := new.raw_user_meta_data ->> 'health_consent';
     v_coach uuid;
 begin
     if v_token is not null then
@@ -285,7 +297,10 @@ begin
           and expires_at > now();
     end if;
 
-    insert into public.profiles (id, name, email, role, coach_id, status)
+    insert into public.profiles (
+        id, name, email, role, coach_id, status,
+        terms_version, terms_accepted_at, health_consent_at
+    )
     values (
         new.id,
         coalesce(new.raw_user_meta_data ->> 'name', 'Sin nombre'),
@@ -295,7 +310,10 @@ begin
             else coalesce(new.raw_user_meta_data ->> 'role', 'athlete')
         end,
         v_coach,
-        case when v_coach is not null then 'active' else 'pending' end
+        case when v_coach is not null then 'active' else 'pending' end,
+        v_terms,
+        case when v_terms is not null then now() end,
+        case when v_salud = 'true' then now() end
     );
 
     if v_coach is not null then

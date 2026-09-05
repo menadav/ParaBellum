@@ -3,6 +3,7 @@ import type {
   AthleteProfile,
   AthleteProfileIn,
   Block,
+  Consent,
   BlockStats,
   DefinitionIn,
   Invitation,
@@ -213,6 +214,11 @@ export const api = {
     body: string | null;
   }) => post<NotificationSent>("/me/notifications", body),
   deleteNotification: (batch: string) => del(`/me/notifications/${batch}`),
+
+  consent: () => get<Consent>("/me/consent"),
+  acceptConsent: (terms_version: string, health: boolean) =>
+    post<Consent>("/me/consent", { terms_version, health }),
+  deleteAccount: () => del("/me"),
 
   health: () => get<{ status: string; database: string }>("/health"),
 };

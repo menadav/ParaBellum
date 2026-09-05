@@ -182,3 +182,11 @@ export interface NotificationSent {
   total: number;
   leidos: number;
 }
+
+export interface Consent {
+  terms_version: string | null;
+  terms_accepted_at: string | null;
+  health_consent_at: string | null;
+  version_actual: string;
+  al_dia: boolean;
+}

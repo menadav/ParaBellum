@@ -3,8 +3,10 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { Wordmark } from "../components/Brand";
+import { VERSION_LEGAL } from "./legal/textos";
 import { ErrorBox, Spinner } from "../components/UI";
 import "../auth/login.css";
+import "./legal/legal.css";
 
 interface InvitacionPublica {
   coach_name: string;
@@ -85,6 +87,8 @@ function Registro({
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [listo, setListo] = useState(false);
+  const [condiciones, setCondiciones] = useState(false);
+  const [salud, setSalud] = useState(false);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -97,7 +101,16 @@ function Registro({
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: nombre.trim(), invitation_token: token } },
+      options: {
+        data: {
+          name: nombre.trim(),
+          invitation_token: token,
+          // El consentimiento viaja con el alta: el trigger lo guarda
+          // en el mismo insert que crea el perfil.
+          terms_version: VERSION_LEGAL,
+          health_consent: salud ? "true" : "false",
+        },
+      },
     });
 
     setEnviando(false);
@@ -180,11 +193,56 @@ function Registro({
           </label>
         </div>
 
+        <div className="consentimiento">
+          <label className="casilla">
+            <input
+              type="checkbox"
+              checked={condiciones}
+              onChange={(e) => setCondiciones(e.target.checked)}
+            />
+            <span>
+              He leído y acepto los{" "}
+              <a href="/terminos" target="_blank" rel="noreferrer">
+                términos del servicio
+              </a>{" "}
+              y la{" "}
+              <a href="/privacidad" target="_blank" rel="noreferrer">
+                política de privacidad
+              </a>
+              .
+            </span>
+          </label>
+
+          <label className="casilla">
+            <input
+              type="checkbox"
+              checked={salud}
+              onChange={(e) => setSalud(e.target.checked)}
+            />
+            <span>
+              Autorizo a {invitacion.coach_name} a tratar mis datos de
+              salud (lesiones, molestias, peso y altura) para adaptar mi
+              entrenamiento.
+              <span className="casilla-nota">
+                Puedes retirarlo cuando quieras desde Ajustes. Sin esto tu
+                entrenador no podrá adaptar la programación a tus lesiones.
+              </span>
+            </span>
+          </label>
+        </div>
+
         {error && <ErrorBox error={new Error(error)} />}
 
-        <button className="btn" disabled={enviando}>
+        <button className="btn" disabled={enviando || !condiciones}>
           {enviando ? "Creando tu cuenta…" : "Crear cuenta"}
         </button>
+              <div className="legal-enlaces">
+          <a href="/legal">Aviso legal</a>
+          <span>·</span>
+          <a href="/privacidad">Privacidad</a>
+          <span>·</span>
+          <a href="/terminos">Términos</a>
+        </div>
       </form>
     </div>
   );

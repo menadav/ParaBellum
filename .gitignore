@@ -15,3 +15,6 @@ env/
 *.csv
 node_modules/
 dist/
+
+# Copias de seguridad de configuracion
+*.bak

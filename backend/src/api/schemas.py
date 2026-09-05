@@ -324,3 +324,16 @@ class NotificationSent(BaseModel):
     expires_at: datetime.datetime | None
     total: int
     leidos: int
+
+
+class ConsentIn(BaseModel):
+    terms_version: str = Field(min_length=1, max_length=40)
+    health: bool = False
+
+
+class ConsentOut(BaseModel):
+    terms_version: str | None
+    terms_accepted_at: datetime.datetime | None
+    health_consent_at: datetime.datetime | None
+    version_actual: str
+    al_dia: bool

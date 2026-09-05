@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Wordmark } from "../components/Brand";
 import { useAuth } from "./AuthProvider";
 import "./login.css";
+import "../pages/legal/legal.css";
 
 export function LoginPage() {
   const { entrar } = useAuth();
@@ -67,6 +68,13 @@ export function LoginPage() {
         <button className="btn" type="submit" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
+              <div className="legal-enlaces">
+          <a href="/legal">Aviso legal</a>
+          <span>·</span>
+          <a href="/privacidad">Privacidad</a>
+          <span>·</span>
+          <a href="/terminos">Términos</a>
+        </div>
       </form>
     </div>
   );

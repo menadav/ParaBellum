@@ -3,7 +3,10 @@ from typing import Optional
 import psycopg
 from models import AthleteStatus, Role, User, WeightUnit
 
-_COLUMNS = "id, name, email, role, coach_id, status, weight_unit"
+_COLUMNS = (
+    "id, name, email, role, coach_id, status, weight_unit, "
+    "terms_version, terms_accepted_at, health_consent_at"
+)
 
 
 def _row_to_user(row: dict) -> User:
@@ -15,6 +18,9 @@ def _row_to_user(row: dict) -> User:
         coach_id=row["coach_id"],
         status=AthleteStatus(row["status"]),
         weight_unit=WeightUnit(row["weight_unit"]),
+        terms_version=row["terms_version"],
+        terms_accepted_at=row["terms_accepted_at"],
+        health_consent_at=row["health_consent_at"],
     )
 
 
@@ -72,3 +78,26 @@ def update_profile(
         "where id = %s",
         (name, weight_unit.value if weight_unit else None, user_id),
     )
+
+
+def record_consent(
+    conn: psycopg.Connection,
+    user_id: uuid.UUID,
+    terms_version: str,
+    health: bool,
+) -> None:
+    # Para quien ya tenia cuenta antes de que existieran los textos.
+    conn.execute(
+        "update profiles set "
+        "  terms_version = %s, "
+        "  terms_accepted_at = now(), "
+        "  health_consent_at = case when %s then now() else health_consent_at end "
+        "where id = %s",
+        (terms_version, health, user_id),
+    )
+
+
+def delete_account(conn: psycopg.Connection, user_id: uuid.UUID) -> None:
+    # Se borra de auth.users y el resto cae en cascada: perfil, bloques,
+    # sesiones, series y avisos. No queda nada.
+    conn.execute("delete from auth.users where id = %s", (user_id,))

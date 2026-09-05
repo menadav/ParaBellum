@@ -13,6 +13,7 @@ from api.schemas import (
     AthleteProfileIn, AthleteProfileOut, BlockStats, BlockUpdate,
     DefinitionIn,
     InvitationIn, InvitationOut, InvitationPublic,
+    ConsentIn, ConsentOut,
     NotificationIn, NotificationOut, NotificationSent,
     ExerciseUpdate,
     ReorderIn, VideoRequired, WorkoutIn, WorkoutUpdate,
@@ -23,6 +24,7 @@ from api.schemas import (
 )
 from models import (
     AthleteProfile, Block, BlockStatus, Exercise, ExerciseDefinition,
+    Role,
     Notification, NotificationKind,
     SetLog, SetPrescription, User, Workout, WorkoutStatus,
 )
@@ -1027,3 +1029,63 @@ def retirar_aviso(
 ) -> None:
     if notifications.delete_batch(conn, batch, usuario.id) == 0:
         raise HTTPException(404, "Ese aviso no existe")
+
+
+# ---------------------------------------------------------------------
+# Consentimiento y baja de la cuenta
+# ---------------------------------------------------------------------
+
+# Al cambiar los textos legales se sube esta fecha y a todo el mundo le
+# vuelve a salir la aceptacion. Tiene que coincidir con la del frontend.
+VERSION_LEGAL = "2026-09-05"
+
+
+@app.get("/me/consent", tags=["legal"])
+def mi_consentimiento(
+    usuario: User = Depends(get_current_user),
+) -> ConsentOut:
+    return ConsentOut(
+        terms_version=usuario.terms_version,
+        terms_accepted_at=usuario.terms_accepted_at,
+        health_consent_at=usuario.health_consent_at,
+        version_actual=VERSION_LEGAL,
+        al_dia=usuario.terms_version == VERSION_LEGAL,
+    )
+
+
+@app.post("/me/consent", tags=["legal"])
+def aceptar_condiciones(
+    datos: ConsentIn,
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> ConsentOut:
+    if datos.terms_version != VERSION_LEGAL:
+        raise HTTPException(409, "Los textos han cambiado, recarga la pagina")
+    profiles.record_consent(conn, usuario.id, datos.terms_version, datos.health)
+    actualizado = profiles.get_by_id(conn, usuario.id)
+    return ConsentOut(
+        terms_version=actualizado.terms_version,
+        terms_accepted_at=actualizado.terms_accepted_at,
+        health_consent_at=actualizado.health_consent_at,
+        version_actual=VERSION_LEGAL,
+        al_dia=True,
+    )
+
+
+@app.delete("/me", status_code=204, tags=["legal"])
+def borrar_mi_cuenta(
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> None:
+    # Derecho de supresion (RGPD art. 17). Se lleva por delante el
+    # perfil, los bloques, las series y los avisos. No hay vuelta atras.
+    # Un coach con atletas no puede irse: sus atletas quedarian sueltos.
+    if usuario.role is Role.COACH:
+        atletas = profiles.list_athletes(conn, usuario.id)
+        if atletas:
+            raise HTTPException(
+                409,
+                f"Tienes {len(atletas)} atletas. Da de baja o traspasa sus "
+                "cuentas antes de borrar la tuya.",
+            )
+    profiles.delete_account(conn, usuario.id)

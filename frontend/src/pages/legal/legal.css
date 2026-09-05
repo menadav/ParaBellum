@@ -1,0 +1,188 @@
+.legal {
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--ink);
+}
+
+.legal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.legal-marca {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--ink);
+}
+
+.legal-nav {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.legal-nav a {
+  padding: 6px var(--sp-3);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.legal-nav a:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.legal-nav a.activo {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.legal-cuerpo {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5) var(--sp-7);
+}
+
+.legal-cuerpo h1 {
+  margin: 0 0 var(--sp-2);
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
+}
+
+.legal-entradilla {
+  margin: 0 0 var(--sp-5);
+  color: var(--ink-3);
+  font-size: 0.95rem;
+}
+
+.legal-cuerpo section {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.legal-cuerpo h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: 1.02rem;
+  font-weight: 650;
+}
+
+.legal-cuerpo p {
+  margin: 0 0 var(--sp-3);
+  line-height: 1.65;
+  font-size: 0.93rem;
+  color: var(--ink-2);
+}
+
+.legal-borrador {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--accent);
+  border-left-width: 3px;
+  border-radius: var(--r);
+  background: var(--accent-soft);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.pendiente {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.86em;
+}
+
+.legal-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.legal-pie a {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+
+/* ---------- Enlaces al pie del login y del registro ---------- */
+
+.legal-enlaces {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.legal-enlaces a {
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal-enlaces a:hover {
+  color: var(--ink);
+}
+
+
+/* ---------- Las casillas del registro ---------- */
+
+.consentimiento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+}
+
+.casilla {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--sp-3);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.casilla input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.casilla a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.casilla-nota {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConsentimientoCard } from "./legal/ConsentimientoCard";
 import { useOutletContext } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
@@ -51,6 +52,8 @@ export function SettingsPage() {
           />
         </div>
       </section>
+
+      <ConsentimientoCard />
 
       <section className="card">
         <div className="card-body spread">
