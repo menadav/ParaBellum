@@ -581,6 +581,15 @@ def _definicion_mia(
     return d
 
 
+@app.get("/exercise-definitions/groups", tags=["catalogo"])
+def categorias_del_catalogo(
+    usuario: User = Depends(get_current_user),
+    conn: psycopg.Connection = Depends(get_conn),
+) -> list[str]:
+    coach_id = usuario.coach_id or usuario.id
+    return defs.groups(conn, coach_id)
+
+
 @app.post("/exercise-definitions", status_code=201, tags=["catalogo"])
 def crear_ejercicio(
     datos: DefinitionIn,

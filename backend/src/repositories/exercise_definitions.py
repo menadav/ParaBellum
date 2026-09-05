@@ -107,3 +107,17 @@ def list_by_ids(
         (definition_ids,),
     ).fetchall()
     return [_row_to_definition(row) for row in filas]
+
+
+def groups(conn: psycopg.Connection, coach_id: uuid.UUID) -> list[str]:
+    # Las categorias del catalogo entero, no las de una busqueda: si
+    # salieran de los resultados filtrados, al elegir una desapareceria
+    # el resto y no habria forma de cambiar sin quitar el filtro.
+    filas = conn.execute(
+        "select distinct muscle_group from exercise_definitions "
+        "where (coach_id is null or coach_id = %s) "
+        "  and muscle_group is not null and btrim(muscle_group) <> '' "
+        "order by muscle_group",
+        (coach_id,),
+    ).fetchall()
+    return [fila["muscle_group"] for fila in filas]

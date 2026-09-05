@@ -489,10 +489,18 @@ function BuscadorEjercicios({
 }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [grupo, setGrupo] = useState<string | null>(null);
 
-  const [catalogoQ] = useQueries({
-    queries: [{ queryKey: ["catalogo", q], queryFn: () => api.catalog(q) }],
+  const [catalogoQ, gruposQ] = useQueries({
+    queries: [
+      {
+        queryKey: ["catalogo", q, grupo],
+        queryFn: () => api.catalog(q, grupo ?? undefined),
+      },
+      { queryKey: ["categorias"], queryFn: api.catalogGroups },
+    ],
   });
+  const grupos = gruposQ.data ?? [];
 
   const anadir = useMutation({
     mutationFn: (definitionId: number) =>
@@ -514,8 +522,29 @@ function BuscadorEjercicios({
           autoFocus
         />
       </div>
+
+      {grupos.length > 0 && (
+        <div className="buscador-grupos">
+          <button
+            className={`dia-btn ${grupo === null ? "on" : ""}`}
+            onClick={() => setGrupo(null)}
+          >
+            Todas
+          </button>
+          {grupos.map((g) => (
+            <button
+              key={g}
+              className={`dia-btn ${grupo === g ? "on" : ""}`}
+              onClick={() => setGrupo(grupo === g ? null : g)}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
+
       <ul className="buscador-lista">
-        {(catalogoQ.data ?? []).slice(0, 8).map((d) => (
+        {(catalogoQ.data ?? []).slice(0, 12).map((d) => (
           <li key={d.id}>
             <button onClick={() => anadir.mutate(d.id)}>
               <span>{d.name}</span>
@@ -527,7 +556,9 @@ function BuscadorEjercicios({
         ))}
         {(catalogoQ.data ?? []).length === 0 && (
           <li className="muted" style={{ padding: "var(--sp-3)" }}>
-            Sin resultados. Los ejercicios se crean en la Biblioteca.
+            {grupo
+              ? `Ningún ejercicio de ${grupo}${q ? ` con "${q}"` : ""}.`
+              : "Sin resultados. Los ejercicios se crean en la Biblioteca."}
           </li>
         )}
       </ul>

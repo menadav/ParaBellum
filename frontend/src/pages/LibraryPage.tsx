@@ -28,10 +28,14 @@ export function LibraryPage() {
     queryFn: () => api.catalog(q, grupo ?? undefined),
   });
 
+  // Del catalogo entero, no de lo ya filtrado: si salieran de los
+  // resultados, al elegir una categoria desapareceria el resto.
+  const { data: grupos = [] } = useQuery({
+    queryKey: ["categorias"],
+    queryFn: api.catalogGroups,
+  });
+
   const ejercicios = data ?? [];
-  const grupos = [
-    ...new Set(ejercicios.map((e) => e.muscle_group).filter(Boolean)),
-  ] as string[];
 
   return (
     <div className="page">

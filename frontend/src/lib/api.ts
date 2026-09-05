@@ -272,6 +272,8 @@ export const api = {
   ) =>
     post<RepeatWeekResult>(`/blocks/${blockId}/weeks/${week}/repeat`, body),
 
+  catalogGroups: () => get<string[]>("/exercise-definitions/groups"),
+
   consent: () => get<Consent>("/me/consent"),
   acceptConsent: (terms_version: string, health: boolean) =>
     post<Consent>("/me/consent", { terms_version, health }),

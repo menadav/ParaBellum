@@ -594,3 +594,10 @@
   color: var(--ink-2);
   font-size: 0.85rem;
 }
+
+.buscador-grupos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: var(--sp-2);
+}
