@@ -7,6 +7,10 @@ import type {
   BlockStats,
   DefinitionIn,
   Invitation,
+  RepeatWeekResult,
+  ImportAnalysis,
+  ImportResult,
+  MapaNombres,
   Notification,
   NotificationKind,
   NotificationSent,
@@ -93,6 +97,26 @@ async function descargar(path: string, porDefecto: string): Promise<void> {
   enlace.download = nombre;
   enlace.click();
   URL.revokeObjectURL(enlace.href);
+}
+
+async function enviarFichero<T>(
+  path: string,
+  formulario: FormData
+): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  // Sin Content-Type: lo pone el navegador con el boundary del multipart.
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    body: formulario,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => null);
+    throw new ApiError(res.status, mensajeDeError(cuerpo, res.status));
+  }
+  return res.json();
 }
 
 export const api = {
@@ -214,6 +238,39 @@ export const api = {
     body: string | null;
   }) => post<NotificationSent>("/me/notifications", body),
   deleteNotification: (batch: string) => del(`/me/notifications/${batch}`),
+
+  analyzeExcel: (fichero: File) => {
+    const cuerpo = new FormData();
+    cuerpo.append("fichero", fichero);
+    return enviarFichero<ImportAnalysis>("/import/analyze", cuerpo);
+  },
+  commitExcel: (opciones: {
+    fichero: File;
+    bloque: string;
+    athlete_id: string;
+    mapa: MapaNombres;
+    nombre: string;
+    inicio: string;
+    guardar: boolean;
+  }) => {
+    const cuerpo = new FormData();
+    cuerpo.append("fichero", opciones.fichero);
+    cuerpo.append("bloque", opciones.bloque);
+    cuerpo.append("athlete_id", opciones.athlete_id);
+    cuerpo.append("mapa", JSON.stringify(opciones.mapa));
+    cuerpo.append("nombre", opciones.nombre);
+    cuerpo.append("inicio", opciones.inicio);
+    cuerpo.append("guardar", String(opciones.guardar));
+    return enviarFichero<ImportResult>("/import/commit", cuerpo);
+  },
+
+  usedWeeks: (blockId: number) => get<number[]>(`/blocks/${blockId}/weeks/used`),
+  repeatWeek: (
+    blockId: number,
+    week: number,
+    body: { semanas?: number[]; hasta_el_final?: boolean; reemplazar?: boolean }
+  ) =>
+    post<RepeatWeekResult>(`/blocks/${blockId}/weeks/${week}/repeat`, body),
 
   consent: () => get<Consent>("/me/consent"),
   acceptConsent: (terms_version: string, health: boolean) =>

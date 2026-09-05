@@ -4,7 +4,15 @@ export const VERSION_LEGAL = "2026-09-05";
 
 // Todo lo que hay entre [[ ]] lo tiene que rellenar una gestoria. Se
 // pinta en rojo para que no se publique nada sin revisar.
+//
+// Van dos: el de partir lleva /g y por eso arrastra lastIndex, asi que
+// no vale para preguntar "queda algo pendiente?". Usar el mismo para
+// las dos cosas hacia que el aviso de borrador saliera un si y un no.
 export const PENDIENTE = /\[\[(.+?)\]\]/g;
+
+export function tienePendientes(texto: string): boolean {
+    return texto.includes("[[");
+}
 
 export interface Seccion {
   titulo: string;

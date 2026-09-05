@@ -190,3 +190,53 @@ export interface Consent {
   version_actual: string;
   al_dia: boolean;
 }
+
+export interface ImportBlock {
+  numero: string;
+  semanas: number;
+  sesiones: number;
+  ejercicios: number;
+  series: number;
+  inicio: string | null;
+  avisos: string[];
+}
+
+export interface ImportName {
+  nombre_excel: string;
+  veces: number;
+  tipo: string | null;
+  sugerido: string;
+  grupo: string | null;
+  ya_en_catalogo: boolean;
+}
+
+export interface ImportAnalysis {
+  fichero: string;
+  bloques: ImportBlock[];
+  nombres: ImportName[];
+}
+
+export interface ImportResult {
+  block_id: number;
+  nombre: string;
+  semanas: number;
+  sesiones: number;
+  ejercicios: number;
+  series: number;
+  definiciones_nuevas: number;
+  inicio: string;
+  guardado: boolean;
+}
+
+export interface MapaNombres {
+  [nombreExcel: string]: { final: string; grupo: string | null };
+}
+
+export interface RepeatWeekResult {
+  origen: number;
+  copiadas: number[];
+  saltadas: number[];
+  sesiones: number;
+  ejercicios: number;
+  series: number;
+}

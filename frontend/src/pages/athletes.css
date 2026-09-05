@@ -58,3 +58,28 @@
 .lista-simple a:hover {
   color: var(--accent);
 }
+
+/* ---------- Acciones por bloque en la ficha del atleta ---------- */
+
+td.acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.estado-select {
+  padding: 4px var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.estado-select:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Wordmark } from "../components/Brand";
 import { useAuth } from "./AuthProvider";
 import "./login.css";
@@ -68,12 +69,12 @@ export function LoginPage() {
         <button className="btn" type="submit" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
-              <div className="legal-enlaces">
-          <a href="/legal">Aviso legal</a>
+        <div className="legal-enlaces">
+          <Link to="/legal">Aviso legal</Link>
           <span>·</span>
-          <a href="/privacidad">Privacidad</a>
+          <Link to="/privacidad">Privacidad</Link>
           <span>·</span>
-          <a href="/terminos">Términos</a>
+          <Link to="/terminos">Términos</Link>
         </div>
       </form>
     </div>

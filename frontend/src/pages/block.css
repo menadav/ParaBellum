@@ -541,3 +541,56 @@
   border: 1px dashed var(--line-strong);
   border-radius: var(--r-lg);
 }
+
+/* ---------- Repetir una semana en otras ---------- */
+
+.repetir {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.repetir-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+
+.repetir-semanas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.repetir-semanas .semana.ocupada {
+  border-style: dashed;
+  border-color: var(--accent);
+}
+
+.repetir-hecho {
+  margin: 0;
+  padding: var(--sp-3);
+  border-radius: var(--r);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.bloque-terminado {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}

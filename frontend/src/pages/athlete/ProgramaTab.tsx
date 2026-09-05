@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
+import { ImportarExcel } from "../ImportarExcel";
+import { BloqueAjustes } from "../BloqueAjustes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { User } from "../../lib/types";
+import type { Block, User } from "../../lib/types";
 import { Icon } from "../../components/Icon";
 import {
   EmptyState,
@@ -14,6 +16,8 @@ import { formatoCorto } from "../HomePage";
 
 export function ProgramaTab() {
   const atleta = useOutletContext<User>();
+  const [importando, setImportando] = useState(false);
+  const [editando, setEditando] = useState<number | null>(null);
   const [creando, setCreando] = useState(false);
 
   const {
@@ -30,12 +34,24 @@ export function ProgramaTab() {
 
   return (
     <div className="stack" style={{ gap: "var(--sp-5)" }}>
-      <div className="row" style={{ justifyContent: "flex-end" }}>
+      <div className="row" style={{ justifyContent: "flex-end", gap: 6 }}>
+        <button className="btn ghost" onClick={() => setImportando(true)}>
+          <Icon name="folder" size={16} />
+          Importar Excel
+        </button>
         <button className="btn" onClick={() => setCreando((v) => !v)}>
           <Icon name="plus" size={16} />
           Nuevo bloque
         </button>
       </div>
+
+      {importando && (
+        <ImportarExcel
+          athleteId={atleta.id}
+          athleteName={atleta.name}
+          onCerrar={() => setImportando(false)}
+        />
+      )}
 
       {creando && (
         <NuevoBloque
@@ -59,6 +75,7 @@ export function ProgramaTab() {
                 <th>Semanas</th>
                 <th>Fechas</th>
                 <th>Estado</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -77,12 +94,31 @@ export function ProgramaTab() {
                   <td>
                     <StatusPill status={b.status} />
                   </td>
+                  <td className="acciones">
+                    <CambiarEstado bloque={b} />
+                    <button
+                      className="btn subtle sm"
+                      onClick={() =>
+                        setEditando((v) => (v === b.id ? null : b.id))
+                      }
+                    >
+                      <Icon name="settings" size={14} />
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </section>
+
+      {editando !== null && (
+        <BloqueAjustes
+          bloque={bloques.find((b) => b.id === editando)!}
+          onCerrar={() => setEditando(null)}
+        />
+      )}
     </div>
   );
 }
@@ -185,4 +221,40 @@ export function proximoLunes(): string {
   const d = new Date();
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
   return d.toISOString().slice(0, 10);
+}
+
+
+const ESTADOS: { valor: Block["status"]; etiqueta: string }[] = [
+  { valor: "draft", etiqueta: "Borrador" },
+  { valor: "active", etiqueta: "Activo" },
+  { valor: "completed", etiqueta: "Terminado" },
+];
+
+function CambiarEstado({ bloque }: { bloque: Block }) {
+  const qc = useQueryClient();
+
+  const cambiar = useMutation({
+    mutationFn: (estado: Block["status"]) =>
+      api.setBlockStatus(bloque.id, estado),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bloquesAtleta", bloque.athlete_id] });
+      qc.invalidateQueries({ queryKey: ["misBloques"] });
+    },
+  });
+
+  return (
+    <select
+      className="estado-select"
+      value={bloque.status}
+      disabled={cambiar.isPending}
+      aria-label={`Estado de ${bloque.name}`}
+      onChange={(e) => cambiar.mutate(e.target.value as Block["status"])}
+    >
+      {ESTADOS.map((e) => (
+        <option key={e.valor} value={e.valor}>
+          {e.etiqueta}
+        </option>
+      ))}
+    </select>
+  );
 }

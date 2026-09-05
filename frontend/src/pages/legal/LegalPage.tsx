@@ -3,6 +3,7 @@ import { Monogram, Wordmark } from "../../components/Brand";
 import {
   DOCUMENTOS,
   PENDIENTE,
+  tienePendientes,
   VERSION_LEGAL,
   type DocumentoLegal,
 } from "./textos";
@@ -11,6 +12,7 @@ import "./legal.css";
 // Pinta en rojo lo que queda por rellenar, para que no se publique
 // ningun texto a medias sin que se vea a la primera.
 function Parrafo({ texto }: { texto: string }) {
+  PENDIENTE.lastIndex = 0;
   const trozos = texto.split(PENDIENTE);
   return (
     <p>
@@ -29,7 +31,7 @@ function Parrafo({ texto }: { texto: string }) {
 
 export function LegalPage({ documento }: { documento: DocumentoLegal }) {
   const sinRellenar = documento.secciones.some((s) =>
-    s.parrafos.some((p) => PENDIENTE.test(p))
+    s.parrafos.some(tienePendientes)
   );
 
   return (

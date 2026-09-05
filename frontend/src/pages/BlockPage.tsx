@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Block, User, Weekday } from "../lib/types";
+import type { Block, RepeatWeekResult, User, Weekday } from "../lib/types";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
@@ -126,7 +126,7 @@ export function BlockPage() {
             </button>
           )
         )}
-        {esCoach && bloque.status !== "completed" && (
+        {esCoach && (
           <SemanasDelBloque
             bloque={bloque}
             onQuitada={() =>
@@ -135,6 +135,13 @@ export function BlockPage() {
           />
         )}
       </nav>
+
+      {esCoach && bloque.status === "completed" && (
+        <p className="bloque-terminado">
+          Este bloque está dado por terminado. Puedes editarlo igualmente
+          — si lo cerraste sin querer, vuelve a activarlo arriba.
+        </p>
+      )}
 
       {entrenos.length > 0 && (
         <div className="leyenda">
@@ -149,6 +156,14 @@ export function BlockPage() {
         </div>
       )}
 
+      {esCoach && entrenos.length > 0 && (
+        <RepetirSemana
+          blockId={id}
+          semana={semana}
+          totalSemanas={bloque.total_weeks}
+        />
+      )}
+
       {entrenosQ.isLoading ? (
         <Spinner />
       ) : bloqueVacio ? (
@@ -157,7 +172,7 @@ export function BlockPage() {
         </section>
       ) : (
         <div className="stack" style={{ gap: "var(--sp-4)" }}>
-          {esCoach && bloque.status !== "completed" && (
+          {esCoach && (
             <AnadirDia
               blockId={id}
               semana={semana}
@@ -177,7 +192,7 @@ export function BlockPage() {
               bloque={bloque}
               fecha={fechaDe(inicio, semana, w.day_of_week)}
               diaNombre={DIAS[w.day_of_week]}
-              editable={bloque.status !== "completed"}
+              editable={true}
               usuario={usuario}
             />
           ))}
@@ -430,5 +445,139 @@ function BotonExportar({ blockId }: { blockId: number }) {
       </button>
       {descarga.error && <ErrorBox error={descarga.error} />}
     </>
+  );
+}
+
+function RepetirSemana({
+  blockId,
+  semana,
+  totalSemanas,
+}: {
+  blockId: number;
+  semana: number;
+  totalSemanas: number;
+}) {
+  const qc = useQueryClient();
+  const [abierto, setAbierto] = useState(false);
+  const [elegidas, setElegidas] = useState<number[]>([]);
+  const [reemplazar, setReemplazar] = useState(false);
+  const [hecho, setHecho] = useState<RepeatWeekResult | null>(null);
+
+  const { data: ocupadas = [] } = useQuery({
+    queryKey: ["semanasUsadas", blockId],
+    queryFn: () => api.usedWeeks(blockId),
+    enabled: abierto,
+  });
+
+  const posteriores = Array.from(
+    { length: totalSemanas - semana },
+    (_, i) => semana + i + 1
+  );
+
+  const repetir = useMutation({
+    mutationFn: (cuales: number[]) =>
+      api.repeatWeek(blockId, semana, { semanas: cuales, reemplazar }),
+    onSuccess: (r) => {
+      setHecho(r);
+      setElegidas([]);
+      qc.invalidateQueries({ queryKey: ["entrenos", blockId] });
+      qc.invalidateQueries({ queryKey: ["semanasUsadas", blockId] });
+    },
+  });
+
+  if (posteriores.length === 0) return null;
+
+  const alternar = (n: number) =>
+    setElegidas((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
+
+  const chocan = elegidas.filter((n) => ocupadas.includes(n));
+
+  return (
+    <section className="repetir">
+      <button
+        className="btn ghost sm"
+        onClick={() => {
+          setAbierto((v) => !v);
+          setHecho(null);
+        }}
+      >
+        <Icon name="layers" size={15} />
+        Repetir la semana {semana} en otras
+      </button>
+
+      {abierto && (
+        <div className="repetir-panel">
+          <p className="muted">
+            Se copian las sesiones, los ejercicios y las series que dejaste
+            planificadas. Las marcas que ya haya hecho el atleta no se tocan.
+          </p>
+
+          <div className="repetir-semanas">
+            {posteriores.map((n) => (
+              <button
+                key={n}
+                className={`semana ${elegidas.includes(n) ? "activa" : ""} ${
+                  ocupadas.includes(n) ? "ocupada" : ""
+                }`}
+                title={
+                  ocupadas.includes(n) ? "Esta semana ya tiene sesiones" : ""
+                }
+                onClick={() => alternar(n)}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              className="btn subtle sm"
+              onClick={() => setElegidas(posteriores)}
+            >
+              Todas
+            </button>
+          </div>
+
+          {chocan.length > 0 && (
+            <label className="casilla">
+              <input
+                type="checkbox"
+                checked={reemplazar}
+                onChange={(e) => setReemplazar(e.target.checked)}
+              />
+              <span>
+                Las semanas {chocan.join(", ")} ya tienen sesiones. Marcar
+                para <strong>borrarlas y sustituirlas</strong>; si no, se
+                saltan.
+              </span>
+            </label>
+          )}
+
+          {repetir.error && <ErrorBox error={repetir.error} />}
+
+          {hecho && (
+            <p className="repetir-hecho">
+              Copiada a {hecho.copiadas.length || "ninguna"} semana
+              {hecho.copiadas.length === 1 ? "" : "s"}
+              {hecho.copiadas.length > 0 &&
+                `: ${hecho.copiadas.join(", ")} · ${hecho.sesiones} sesiones, ${
+                  hecho.series
+                } series`}
+              {hecho.saltadas.length > 0 &&
+                ` · saltadas por tener contenido: ${hecho.saltadas.join(", ")}`}
+            </p>
+          )}
+
+          <button
+            className="btn"
+            disabled={elegidas.length === 0 || repetir.isPending}
+            onClick={() => repetir.mutate(elegidas)}
+          >
+            {repetir.isPending
+              ? "Copiando…"
+              : `Copiar a ${elegidas.length} semana${
+                  elegidas.length === 1 ? "" : "s"
+                }`}
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

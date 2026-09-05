@@ -337,3 +337,56 @@ class ConsentOut(BaseModel):
     health_consent_at: datetime.datetime | None
     version_actual: str
     al_dia: bool
+
+
+class ImportBlockOut(BaseModel):
+    numero: str
+    semanas: int
+    sesiones: int
+    ejercicios: int
+    series: int
+    inicio: datetime.date | None
+    avisos: list[str]
+
+
+class ImportNameOut(BaseModel):
+    nombre_excel: str
+    veces: int
+    tipo: str | None
+    sugerido: str
+    grupo: str | None
+    ya_en_catalogo: bool
+
+
+class ImportAnalysis(BaseModel):
+    fichero: str
+    bloques: list[ImportBlockOut]
+    nombres: list[ImportNameOut]
+
+
+class ImportResult(BaseModel):
+    block_id: int
+    nombre: str
+    semanas: int
+    sesiones: int
+    ejercicios: int
+    series: int
+    definiciones_nuevas: int
+    inicio: datetime.date
+    guardado: bool
+
+
+class RepeatWeekIn(BaseModel):
+    # Sin semanas, va de la siguiente al final del bloque.
+    semanas: list[int] | None = None
+    hasta_el_final: bool = True
+    reemplazar: bool = False
+
+
+class RepeatWeekOut(BaseModel):
+    origen: int
+    copiadas: list[int]
+    saltadas: list[int]
+    sesiones: int
+    ejercicios: int
+    series: int

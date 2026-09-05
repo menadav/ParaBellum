@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { Wordmark } from "../components/Brand";
@@ -237,11 +237,11 @@ function Registro({
           {enviando ? "Creando tu cuenta…" : "Crear cuenta"}
         </button>
               <div className="legal-enlaces">
-          <a href="/legal">Aviso legal</a>
+          <Link to="/legal">Aviso legal</Link>
           <span>·</span>
-          <a href="/privacidad">Privacidad</a>
+          <Link to="/privacidad">Privacidad</Link>
           <span>·</span>
-          <a href="/terminos">Términos</a>
+          <Link to="/terminos">Términos</Link>
         </div>
       </form>
     </div>

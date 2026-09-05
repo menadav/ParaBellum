@@ -1,0 +1,283 @@
+.importar-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.importar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 88vh;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.importar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.importar-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.importar-pasos {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-5);
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.importar-pasos li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.importar-pasos .numero {
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.importar-pasos li.activo {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.importar-pasos li.activo .numero {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.importar-pasos li.hecho .numero {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.importar-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  overflow-y: auto;
+}
+
+.importar-pie {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.crece {
+  flex: 1;
+}
+
+
+/* ---------- Paso 1 ---------- */
+
+.soltar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.soltar:hover {
+  border-color: var(--accent);
+}
+
+.soltar input {
+  display: none;
+}
+
+.bloques {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--sp-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: var(--sp-3);
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.bloque:hover {
+  border-color: var(--line-strong);
+}
+
+.bloque.elegido {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.bloque .cifras {
+  color: var(--ink-2);
+}
+
+.avisos-excel {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left: 3px solid #b45309;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  font-size: 0.83rem;
+}
+
+.avisos-excel ul {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-4);
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+
+/* ---------- Paso 2 ---------- */
+
+.aviso-fusion {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--accent);
+  border-left-width: 3px;
+  border-radius: var(--r);
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.aviso-fusion > svg {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.nombres {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nombres li {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 6px var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font-size: 0.85rem;
+}
+
+.nombres li.fusion {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.nombres li > svg {
+  color: var(--ink-3);
+}
+
+.nombre-origen {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombres .input {
+  font-size: 0.85rem;
+  padding: 5px var(--sp-3);
+}
+
+.ya {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+
+/* ---------- Paso 3 ---------- */
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--sp-2);
+}
+
+.cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.numero-grande {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}

@@ -43,32 +43,40 @@ export default function App() {
 function Rutas() {
   const { session, cargando } = useAuth();
 
-  const ruta = window.location.pathname;
-  const legal = DOCUMENTOS.find((d) => d.ruta === ruta);
+  // Se abren SIN cuenta: la invitacion, y los textos legales. Un atleta
+  // que se lo esta pensando, o la AEPD mirando una reclamacion, no van a
+  // registrarse para leerlos. Se registran las tres paginas siempre, no
+  // solo la que coincide al entrar, o no se puede navegar entre ellas.
+  const publicas = [
+    <Route key="invitar" path="/invitar/:token" element={<InvitePage />} />,
+    ...DOCUMENTOS.map((d) => (
+      <Route
+        key={d.ruta}
+        path={d.ruta}
+        element={<LegalPage documento={d} />}
+      />
+    )),
+  ];
 
-  // Los textos legales se leen SIN cuenta: un atleta que se lo esta
-  // pensando, o la AEPD mirando una reclamacion, no van a registrarse
-  // para leerlos. Van antes del login, igual que la invitacion.
-  if (legal)
+  if (cargando)
     return (
       <Routes>
-        <Route path={legal.ruta} element={<LegalPage documento={legal} />} />
+        {publicas}
+        <Route path="*" element={<Spinner label="Cargando…" />} />
       </Routes>
     );
 
-  // El enlace de invitacion se abre SIN cuenta: va antes que el login.
-  if (ruta.startsWith("/invitar/"))
+  if (!session)
     return (
       <Routes>
-        <Route path="/invitar/:token" element={<InvitePage />} />
+        {publicas}
+        <Route path="*" element={<LoginPage />} />
       </Routes>
     );
-
-  if (cargando) return <Spinner label="Cargando…" />;
-  if (!session) return <LoginPage />;
 
   return (
     <Routes>
+      {publicas}
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="/atletas" element={<AthletesPage />} />
@@ -82,15 +90,9 @@ function Rutas() {
         <Route path="/bloques/:blockId" element={<BlockPage />} />
         <Route path="/biblioteca" element={<LibraryPage />} />
         <Route path="/ajustes" element={<SettingsPage />} />
-        {DOCUMENTOS.map((d) => (
-          <Route
-            key={d.ruta}
-            path={d.ruta}
-            element={<LegalPage documento={d} />}
-          />
-        ))}
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+
