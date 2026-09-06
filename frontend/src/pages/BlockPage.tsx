@@ -7,6 +7,7 @@ import { Icon } from "../components/Icon";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
 import { WorkoutCard } from "./WorkoutCard";
+import { TablaSesion } from "./TablaSesion";
 import { BloqueAjustes } from "./BloqueAjustes";
 import "./block.css";
 
@@ -16,6 +17,19 @@ export function BlockPage() {
   const { blockId = "" } = useParams();
   const id = Number(blockId);
   const [semana, setSemana] = useState(1);
+  // Se recuerda: quien viene del Excel suele querer siempre la rejilla.
+  const [vista, setVista] = useState<"fichas" | "tabla">(
+    () => (localStorage.getItem("vistaBloque") as "tabla" | null) ?? "fichas"
+  );
+
+  function cambiarVista(nueva: "fichas" | "tabla") {
+    setVista(nueva);
+    try {
+      localStorage.setItem("vistaBloque", nueva);
+    } catch {
+      // Navegador con el almacenamiento bloqueado: da igual, no se recuerda.
+    }
+  }
   const usuario = useOutletContext<User>();
   const esCoach = usuario.role === "coach";
   const [ajustes, setAjustes] = useState(false);
@@ -156,7 +170,26 @@ export function BlockPage() {
         </div>
       )}
 
-      {esCoach && entrenos.length > 0 && (
+      {entrenos.length > 0 && (
+        <div className="row" style={{ justifyContent: "flex-end" }}>
+          <div className="vista">
+            <button
+              className={vista === "fichas" ? "on" : ""}
+              onClick={() => cambiarVista("fichas")}
+            >
+              Fichas
+            </button>
+            <button
+              className={vista === "tabla" ? "on" : ""}
+              onClick={() => cambiarVista("tabla")}
+            >
+              Tabla
+            </button>
+          </div>
+        </div>
+      )}
+
+      {esCoach && entrenos.length > 0 && vista === "fichas" && (
         <RepetirSemana
           blockId={id}
           semana={semana}
@@ -185,17 +218,27 @@ export function BlockPage() {
               de arriba.
             </p>
           )}
-          {entrenos.map((w) => (
-            <WorkoutCard
-              key={w.id}
-              workout={w}
-              bloque={bloque}
-              fecha={fechaDe(inicio, semana, w.day_of_week)}
-              diaNombre={DIAS[w.day_of_week]}
-              editable={true}
-              usuario={usuario}
-            />
-          ))}
+          {entrenos.map((w) =>
+            vista === "tabla" ? (
+              <TablaSesion
+                key={w.id}
+                workout={w}
+                bloque={bloque}
+                fecha={fechaDe(inicio, semana, w.day_of_week)}
+                diaNombre={DIAS[w.day_of_week]}
+              />
+            ) : (
+              <WorkoutCard
+                key={w.id}
+                workout={w}
+                bloque={bloque}
+                fecha={fechaDe(inicio, semana, w.day_of_week)}
+                diaNombre={DIAS[w.day_of_week]}
+                editable={true}
+                usuario={usuario}
+              />
+            )
+          )}
         </div>
       )}
     </div>

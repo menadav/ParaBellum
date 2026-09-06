@@ -1088,23 +1088,18 @@ def aceptar_condiciones(
     )
 
 
-@app.delete("/me", status_code=204, tags=["legal"])
-def borrar_mi_cuenta(
-    usuario: User = Depends(get_current_user),
-    conn: psycopg.Connection = Depends(get_conn),
-) -> None:
-    # Derecho de supresion (RGPD art. 17). Se lleva por delante el
-    # perfil, los bloques, las series y los avisos. No hay vuelta atras.
-    # Un coach con atletas no puede irse: sus atletas quedarian sueltos.
-    if usuario.role is Role.COACH:
-        atletas = profiles.list_athletes(conn, usuario.id)
-        if atletas:
-            raise HTTPException(
-                409,
-                f"Tienes {len(atletas)} atletas. Da de baja o traspasa sus "
-                "cuentas antes de borrar la tuya.",
-            )
-    profiles.delete_account(conn, usuario.id)
+# El borrado de cuenta esta desactivado a proposito. Quitar solo el
+# boton no serviria: quien robase una contrasena podria llamar a
+# DELETE /me desde el navegador y llevarse el historico entero, que no
+# tiene copia de seguridad ni deshacer. Mientras no haya verificacion
+# en dos pasos, las bajas se piden por escrito y las hace el coach.
+#
+# profiles.delete_account() sigue en el repositorio para cuando se
+# reactive; lo unico que falta es volver a poner la ruta.
+#
+# @app.delete("/me", status_code=204, tags=["legal"])
+# def borrar_mi_cuenta(...):
+#     ...
 
 
 # ---------------------------------------------------------------------

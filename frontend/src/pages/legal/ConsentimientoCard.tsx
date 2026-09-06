@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import { supabase } from "../../lib/supabase";
-import { Confirmar } from "../../components/Confirmar";
 import { ErrorBox } from "../../components/UI";
 import { VERSION_LEGAL } from "./textos";
 import "./legal.css";
@@ -21,7 +19,6 @@ function cuando(iso: string | null): string {
 export function ConsentimientoCard() {
   const qc = useQueryClient();
   const [salud, setSalud] = useState(false);
-  const [borrando, setBorrando] = useState(false);
 
   const { data: consentimiento } = useQuery({
     queryKey: ["consentimiento"],
@@ -33,13 +30,7 @@ export function ConsentimientoCard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["consentimiento"] }),
   });
 
-  const borrarCuenta = useMutation({
-    mutationFn: api.deleteAccount,
-    onSuccess: async () => {
-      await supabase.auth.signOut();
-      window.location.href = "/";
-    },
-  });
+
 
   if (!consentimiento) return null;
 
@@ -115,33 +106,7 @@ export function ConsentimientoCard() {
         </div>
       </section>
 
-      <section className="card">
-        <div className="card-body spread">
-          <div className="stack">
-            <strong>Borrar mi cuenta</strong>
-            <span className="muted">
-              Se borra tu perfil, tus bloques y todo tu historial de series.
-              No se puede deshacer.
-            </span>
-          </div>
-          <button className="btn ghost" onClick={() => setBorrando(true)}>
-            Borrar
-          </button>
-        </div>
-      </section>
 
-      {borrando && (
-        <Confirmar
-          titulo="Borrar tu cuenta"
-          descripcion="Desaparece todo: tu perfil, tus bloques, cada serie que has registrado y tus avisos. Nadie puede recuperarlo, ni tú ni tu entrenador. Si solo quieres una copia, descarga antes el Excel de cada bloque."
-          escribir="BORRAR MI CUENTA"
-          textoBoton="Borrar para siempre"
-          cargando={borrarCuenta.isPending}
-          error={borrarCuenta.error}
-          onCancelar={() => setBorrando(false)}
-          onConfirmar={() => borrarCuenta.mutate()}
-        />
-      )}
     </>
   );
 }

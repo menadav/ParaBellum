@@ -69,6 +69,10 @@ export function LoginPage() {
         <button className="btn" type="submit" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
+
+        <div className="legal-enlaces" style={{ marginTop: 0 }}>
+          <Link to="/recuperar">¿Has olvidado tu contraseña?</Link>
+        </div>
         <div className="legal-enlaces">
           <Link to="/legal">Aviso legal</Link>
           <span>·</span>

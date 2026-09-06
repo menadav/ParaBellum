@@ -1,0 +1,164 @@
+.tabla-sesion {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.tabla-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+/* La rejilla es ancha a proposito: scrollea ella, nunca la pagina. */
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla-excel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tabla-excel th,
+.tabla-excel td {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 5px var(--sp-2);
+  text-align: center;
+}
+
+.tabla-excel thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.fila-grupos th {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.grupo-prescrito {
+  background: var(--ink) !important;
+  color: var(--surface) !important;
+}
+
+.grupo-serie {
+  background: var(--ground) !important;
+  border-left: 2px solid var(--line-strong) !important;
+}
+
+/* Las dos primeras columnas se quedan fijas al desplazar a lo ancho. */
+.col-num,
+.col-ejercicio {
+  position: sticky;
+  background: var(--surface);
+  text-align: left !important;
+  z-index: 2;
+}
+
+.col-num {
+  left: 0;
+  width: 34px;
+  text-align: center !important;
+}
+
+.col-ejercicio {
+  left: 34px;
+  min-width: 190px;
+}
+
+.tabla-excel thead .col-num,
+.tabla-excel thead .col-ejercicio {
+  z-index: 3;
+  background: var(--surface-2);
+}
+
+.col-ejercicio .grupo {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--ink-3);
+}
+
+.col-protocolo {
+  min-width: 170px;
+  max-width: 260px;
+  text-align: left !important;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.col-video {
+  width: 48px;
+}
+
+.col-dato {
+  min-width: 52px;
+  color: var(--ink);
+}
+
+.col-e1rm {
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* Lo que dejo escrito el coach y el atleta aun no ha hecho. */
+.col-dato.pendiente {
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.tabla-excel tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.tabla-excel tbody tr:hover .col-num,
+.tabla-excel tbody tr:hover .col-ejercicio {
+  background: var(--surface-2);
+}
+
+.tabla-excel .vacia {
+  padding: var(--sp-4);
+  text-align: center !important;
+}
+
+/* ---------- El interruptor de vista ---------- */
+
+.vista {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.vista button {
+  padding: 5px var(--sp-3);
+  border: 0;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.vista button.on {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}

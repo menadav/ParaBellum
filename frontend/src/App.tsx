@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { ThemeProvider } from "./theme";
 import { LoginPage } from "./auth/LoginPage";
+import { NuevaPassword } from "./auth/NuevaPassword";
+import { RecuperarPassword } from "./auth/RecuperarPassword";
 import { Layout } from "./components/Layout";
 import { Spinner } from "./components/UI";
 import { AthleteLayout } from "./pages/athlete/AthleteLayout";
@@ -49,6 +51,11 @@ function Rutas() {
   // solo la que coincide al entrar, o no se puede navegar entre ellas.
   const publicas = [
     <Route key="invitar" path="/invitar/:token" element={<InvitePage />} />,
+    <Route key="recuperar" path="/recuperar" element={<RecuperarPassword />} />,
+    // Va aqui y no solo en la rama sin sesion: al abrir el enlace del
+    // correo Supabase crea una sesion temporal, y sin esta ruta el
+    // usuario acabaria dentro de la app sin haber cambiado nada.
+    <Route key="nueva" path="/nueva-password" element={<NuevaPassword />} />,
     ...DOCUMENTOS.map((d) => (
       <Route
         key={d.ruta}
