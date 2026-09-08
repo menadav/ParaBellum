@@ -1,0 +1,46 @@
+.plegable {
+  overflow: hidden;
+}
+
+.plegable-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-4);
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plegable-head:hover strong {
+  color: var(--accent);
+}
+
+.plegable-head > svg {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.plegable-resumen {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plegable-cuerpo {
+  padding: 0 var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-4);
+}
+
+/* Las tarjetas de dentro ya no llevan marco propio: lo pone el plegable. */
+.plegable-cuerpo > .card {
+  border: 0;
+  background: none;
+  padding: 0;
+}

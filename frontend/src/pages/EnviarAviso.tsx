@@ -70,14 +70,6 @@ export function EnviarAviso() {
 
   return (
     <div className="card">
-      <div className="card-head">
-        <h2>Avisar a tus atletas</h2>
-        <p className="muted">
-          Les aparece nada más entrar en la app, hasta que lo marcan como
-          leído.
-        </p>
-      </div>
-
       <div className="enviar-aviso">
         <div className="tipos">
           {TIPOS.map((t) => (

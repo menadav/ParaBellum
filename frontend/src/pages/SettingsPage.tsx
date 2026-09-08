@@ -12,6 +12,7 @@ import { CambiarPassword } from "./CambiarPassword";
 
 export function SettingsPage() {
   const usuario = useOutletContext<User>();
+  const esCoach = usuario.role === "coach";
   const { salir } = useAuth();
 
   const salud = useQuery({
@@ -30,9 +31,10 @@ export function SettingsPage() {
 
       <Perfil usuario={usuario} />
       <CambiarPassword usuario={usuario} />
-      <Preferencias usuario={usuario} />
+      <Preferencias />
 
-      <section className="card">
+      {esCoach && (
+        <section className="card">
         <div className="card-body stack" style={{ gap: "var(--sp-4)" }}>
           <h2>Sistema</h2>
           <div className="spread">
@@ -48,10 +50,11 @@ export function SettingsPage() {
           </div>
           <Fila
             etiqueta="Servidor"
-            valor={import.meta.env.VITE_API_URL ?? "localhost:8030"}
+            valor={direccionApi()}
           />
         </div>
       </section>
+      )}
 
       <ConsentimientoCard />
 
@@ -137,35 +140,13 @@ function Perfil({ usuario }: { usuario: User }) {
   );
 }
 
-function Preferencias({ usuario }: { usuario: User }) {
-  const qc = useQueryClient();
+function Preferencias() {
   const { tema, setTema } = useTheme();
-
-  const unidad = useMutation({
-    mutationFn: (u: "kg" | "lb") => api.updateMe({ weight_unit: u }),
-    onSuccess: (nuevo) => qc.setQueryData(["me"], nuevo),
-  });
 
   return (
     <section className="card">
       <div className="card-body stack" style={{ gap: "var(--sp-4)" }}>
         <h2>Preferencias</h2>
-
-        <div className="spread">
-          <span className="label">Unidad de peso</span>
-          <div className="segmento">
-            {(["kg", "lb"] as const).map((u) => (
-              <button
-                key={u}
-                className={usuario.weight_unit === u ? "on" : ""}
-                disabled={unidad.isPending}
-                onClick={() => unidad.mutate(u)}
-              >
-                {u.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="spread">
           <span className="label">Tema</span>
@@ -188,7 +169,6 @@ function Preferencias({ usuario }: { usuario: User }) {
           </div>
         </div>
 
-        {unidad.error && <ErrorBox error={unidad.error} />}
       </div>
     </section>
   );
@@ -201,4 +181,12 @@ function Fila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
       <span>{valor}</span>
     </div>
   );
+}
+
+
+// VITE_API_URL puede ser una ruta relativa (/api, el proxy de Vite).
+// Mostrarla tal cual no dice nada: mejor la direccion completa.
+function direccionApi(): string {
+  const base = import.meta.env.VITE_API_URL ?? "http://localhost:8030";
+  return base.startsWith("/") ? window.location.origin + base : base;
 }

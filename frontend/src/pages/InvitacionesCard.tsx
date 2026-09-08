@@ -34,11 +34,6 @@ export function InvitacionesCard() {
 
   return (
     <section className="card">
-      <CardHead
-        icon="userPlus"
-        title="Invitar atletas"
-        aside={pendientes.length ? `${pendientes.length} sin usar` : undefined}
-      />
       <div className="card-body stack" style={{ gap: "var(--sp-4)" }}>
         <p className="pista">
           Crea un enlace y pásaselo a tu atleta por donde quieras. Al

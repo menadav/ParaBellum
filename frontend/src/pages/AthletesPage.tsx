@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import type { Block } from "../lib/types";
 import { iniciales } from "../components/Sidebar";
 import { EmptyState, ErrorBox, Spinner, StatusPill } from "../components/UI";
+import { Plegable } from "../components/Plegable";
 import { EnviarAviso } from "./EnviarAviso";
 import { InvitacionesCard } from "./InvitacionesCard";
 import "./athletes.css";
@@ -37,8 +38,23 @@ export function AthletesPage() {
         </div>
       </div>
 
-      <InvitacionesCard />
-      <EnviarAviso />
+      <Plegable
+        id="invitar"
+        titulo="Invitar atletas"
+        icono="userPlus"
+        resumen="Crea un enlace y pásaselo por donde quieras"
+      >
+        <InvitacionesCard />
+      </Plegable>
+
+      <Plegable
+        id="avisar"
+        titulo="Avisar a tus atletas"
+        icono="inbox"
+        resumen="Les aparece nada más entrar en la app"
+      >
+        <EnviarAviso />
+      </Plegable>
 
       <section className="card">
         {atletas.length === 0 ? (
