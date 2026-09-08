@@ -9,6 +9,7 @@ import type {
   Workout,
 } from "../lib/types";
 import { Icon } from "../components/Icon";
+import { Objetivo } from "./Objetivo";
 import { StatusPill } from "../components/UI";
 import { formatoCorto } from "./HomePage";
 
@@ -51,7 +52,7 @@ export function WorkoutCard({
   }
   const esCoach = usuario.role === "coach";
 
-  const [ejerciciosQ, seriesQ, catalogoQ] = useQueries({
+  const [ejerciciosQ, seriesQ, catalogoQ, objetivosQ] = useQueries({
     queries: [
       {
         queryKey: ["ejercicios", workout.id],
@@ -59,6 +60,10 @@ export function WorkoutCard({
       },
       { queryKey: ["series", workout.id], queryFn: () => api.logs(workout.id) },
       { queryKey: ["catalogo", ""], queryFn: () => api.catalog() },
+      {
+        queryKey: ["objetivos", workout.id],
+        queryFn: () => api.prescriptions(workout.id),
+      },
     ],
   });
 
@@ -95,6 +100,7 @@ export function WorkoutCard({
   }
   const series = seriesQ.data ?? [];
   const catalogo = catalogoQ.data ?? [];
+  const objetivos = objetivosQ.data ?? [];
 
   return (
     <section className="card entreno">
@@ -160,6 +166,7 @@ export function WorkoutCard({
                 (d: ExerciseDefinition) => d.id === e.definition_id
               )}
               series={series.filter((s) => s.exercise_id === e.id)}
+              objetivos={objetivos.filter((o) => o.exercise_id === e.id)}
               athleteId={bloque.athlete_id}
               editable={editable}
               esCoach={esCoach}
@@ -195,6 +202,7 @@ function FilaEjercicio({
   workoutId,
   definicion,
   series,
+  objetivos,
   athleteId,
   editable,
   esCoach,
@@ -215,6 +223,7 @@ function FilaEjercicio({
   workoutId: number;
   definicion?: ExerciseDefinition;
   series: SetLog[];
+  objetivos: SetPrescription[];
   athleteId: string;
   editable: boolean;
   esCoach: boolean;
@@ -304,6 +313,13 @@ function FilaEjercicio({
         editable={editable && esCoach}
       />
 
+      <Objetivo
+        exerciseId={exerciseId}
+        workoutId={workoutId}
+        objetivos={objetivos}
+        editable={editable && esCoach}
+      />
+
       <div className="ejercicio-cuerpo">
         <UltimaVez exerciseId={exerciseId} />
 
@@ -319,6 +335,17 @@ function FilaEjercicio({
               esCoach={esCoach}
             />
           ))}
+          {objetivos
+            .filter((o) => !series.some((s) => s.set_number === o.set_number))
+            .map((o) => (
+              <HuecoObjetivo
+                key={o.set_number}
+                exerciseId={exerciseId}
+                workoutId={workoutId}
+                objetivo={o}
+                editable={editable}
+              />
+            ))}
           {editable && (
             <NuevaSerie
               exerciseId={exerciseId}
@@ -916,5 +943,60 @@ function NotaEjercicio({
         </button>
       )}
     </div>
+  );
+}
+
+
+// Un objetivo que el atleta todavia no ha hecho. Sale en hueco, y al
+// tocarlo se abre ya con los numeros que le pidio el coach: casi
+// siempre solo tiene que confirmar o ajustar uno.
+function HuecoObjetivo({
+  exerciseId,
+  workoutId,
+  objetivo,
+  editable,
+}: {
+  exerciseId: number;
+  workoutId: number;
+  objetivo: SetPrescription;
+  editable: boolean;
+}) {
+  const qc = useQueryClient();
+  const [abierto, setAbierto] = useState(false);
+
+  if (abierto)
+    return (
+      <FormularioSerie
+        exerciseId={exerciseId}
+        desde={objetivo.set_number}
+        inicial={
+          {
+            reps: objetivo.target_reps,
+            weight: objetivo.target_weight,
+            rpe: objetivo.target_rpe,
+          } as SetLog
+        }
+        onHecho={() => setAbierto(false)}
+        onGuardado={() => {
+          qc.invalidateQueries({ queryKey: ["series", workoutId] });
+          qc.invalidateQueries({ queryKey: ["historial", exerciseId] });
+        }}
+      />
+    );
+
+  return (
+    <button
+      className="serie-hueco"
+      disabled={!editable}
+      title={editable ? "Anotar lo que has hecho" : undefined}
+      onClick={() => setAbierto(true)}
+    >
+      <span className="num">{objetivo.set_number}</span>
+      <span className="hueco-texto">
+        {objetivo.target_weight !== null && `${objetivo.target_weight}kg × `}
+        {objetivo.target_reps}
+        {objetivo.target_rpe !== null && ` @${objetivo.target_rpe}`}
+      </span>
+    </button>
   );
 }

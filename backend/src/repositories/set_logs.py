@@ -152,3 +152,45 @@ def import_many(
             "on conflict (exercise_id, set_number) do nothing",
             [(exercise_id, *fila) for fila in filas],
         )
+
+
+def sync_with_targets(
+    conn: psycopg.Connection,
+    exercise_id: int,
+    coach_id: uuid.UUID,
+    objetivos: list[tuple],
+) -> tuple[int, int]:
+    # (set_number, reps, weight, rpe) por objetivo.
+    #
+    # Crea la serie que falta, y si ya existe la actualiza SOLO cuando
+    # sigue siendo del coach. El "where" es la clave: si el atleta ya
+    # movio 107.5 donde le pedian 100, cambiar el objetivo no puede
+    # pisarle la marca. Pero una serie pendiente es del coach, asi que
+    # tiene que seguir al objetivo o quedaria incoherente.
+    creadas = 0
+    if objetivos:
+        with conn.cursor() as cur:
+            cur.executemany(
+                "insert into set_logs "
+                "(exercise_id, set_number, reps, weight, rpe, logged_by) "
+                "values (%s, %s, %s, %s, %s, %s) "
+                "on conflict (exercise_id, set_number) do update set "
+                "    reps = excluded.reps, "
+                "    weight = excluded.weight, "
+                "    rpe = excluded.rpe "
+                "where set_logs.logged_by = excluded.logged_by",
+                [(exercise_id, *o, coach_id) for o in objetivos],
+            )
+            creadas = cur.rowcount if cur.rowcount > 0 else 0
+
+    # Si el coach recorta de 5 series a 3, las dos que sobran se van,
+    # pero solo si siguen pendientes. Lo que hizo el atleta se queda.
+    numeros = [o[0] for o in objetivos]
+    borradas = conn.execute(
+        "delete from set_logs "
+        "where exercise_id = %s and logged_by = %s "
+        "  and not (set_number = any(%s)) "
+        "returning id",
+        (exercise_id, coach_id, numeros),
+    ).fetchall()
+    return creadas, len(borradas)

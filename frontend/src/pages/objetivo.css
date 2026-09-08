@@ -1,0 +1,184 @@
+/* ---------- Lo que el coach pide (arriba) ---------- */
+
+.objetivo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0 0 6px 40px;
+  padding: 5px var(--sp-3);
+  border-left: 2px solid var(--ink-3);
+  border-radius: 0 var(--r) var(--r) 0;
+  background: var(--surface-2);
+}
+
+.objetivo-etiqueta {
+  flex: none;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.objetivo-series {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.objetivo-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px var(--sp-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.objetivo-chip b {
+  font-size: 0.62rem;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.objetivo-chip i {
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--ink-3);
+}
+
+.objetivo-chip em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.objetivo button {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.objetivo:hover button,
+.objetivo button:focus {
+  opacity: 1;
+}
+
+.objetivo-anadir {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 6px 40px;
+  padding: 3px var(--sp-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: none;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.objetivo-anadir:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ---------- Editarlo ---------- */
+
+.objetivo-editar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3) 40px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+}
+
+.objetivo-tabla {
+  display: grid;
+  grid-template-columns: 34px 1fr 1fr 1fr 30px;
+  gap: 5px;
+  align-items: center;
+  font-size: 0.78rem;
+}
+
+.objetivo-tabla .input {
+  padding: 4px var(--sp-2);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+@media (hover: none) {
+  .objetivo button {
+    opacity: 1;
+  }
+}
+
+/* ---------- Hueco: un objetivo aun sin hacer ---------- */
+
+.serie-hueco {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px var(--sp-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: none;
+  color: var(--ink-3);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.serie-hueco:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.serie-hueco:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.serie-hueco .num {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.hueco-texto {
+  font-style: italic;
+}
+
+.objetivo-rapida {
+  display: grid;
+  grid-template-columns: 52px 12px 1fr 1fr 1fr auto;
+  gap: 5px;
+  align-items: center;
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.objetivo-rapida .input {
+  padding: 4px var(--sp-2);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.objetivo-rapida > span {
+  text-align: center;
+  color: var(--ink-3);
+}
+
+.objetivo-vacio {
+  grid-column: 1 / -1;
+  padding: var(--sp-3) 0;
+  font-size: 0.8rem;
+}

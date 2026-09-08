@@ -479,6 +479,14 @@ def prescribir_series(
         )
         for s in datos.sets
     ])
+
+    # El objetivo crea la serie que el atleta tendra que rellenar. Nace
+    # con los numeros pedidos y a nombre del coach, o sea pendiente;
+    # cuando el atleta la guarda pasa a ser suya.
+    set_logs.sync_with_targets(conn, exercise_id, usuario.id, [
+        (s.set_number, s.target_reps, s.target_weight, s.target_rpe)
+        for s in datos.sets
+    ])
     return set_prescriptions.list_for_exercise(conn, exercise_id)
 
 
