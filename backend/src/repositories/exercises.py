@@ -94,12 +94,16 @@ def update(
     notes: Optional[str] = None,
     superset_group: Optional[str] = None,
 ) -> None:
+    # None = no tocar el campo. Cadena vacia = borrarlo. Con un
+    # coalesce a secas no habria forma de quitar una nota.
     conn.execute(
         "update exercises set "
-        "  notes = coalesce(%s::text, notes), "
-        "  superset_group = coalesce(%s::text, superset_group) "
+        "  notes = case when %s::text is null then notes "
+        "               else nullif(btrim(%s::text), '') end, "
+        "  superset_group = case when %s::text is null then superset_group "
+        "                        else nullif(btrim(%s::text), '') end "
         "where id = %s",
-        (notes, superset_group, exercise_id),
+        (notes, notes, superset_group, superset_group, exercise_id),
     )
 
 

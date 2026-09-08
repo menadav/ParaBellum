@@ -27,7 +27,28 @@ export function WorkoutCard({
   editable: boolean;
   usuario: User;
 }) {
+  const qc = useQueryClient();
   const [anadiendo, setAnadiendo] = useState(false);
+  const [arrastrando, setArrastrando] = useState<number | null>(null);
+  const [encima, setEncima] = useState<number | null>(null);
+  // Orden provisional mientras el servidor confirma. Sin esto la fila
+  // volveria a su sitio 300 ms y saltaria al nuevo: un parpadeo feo.
+  const [ordenLocal, setOrdenLocal] = useState<number[] | null>(null);
+  // Plegar por dia. Se recuerda por sesion, para que al volver al
+  // bloque siga como lo dejaste.
+  const [plegado, setPlegado] = useState(
+    () => localStorage.getItem(`plegada-${workout.id}`) === "1"
+  );
+
+  function alternarPlegado() {
+    const nuevo = !plegado;
+    setPlegado(nuevo);
+    try {
+      localStorage.setItem(`plegada-${workout.id}`, nuevo ? "1" : "0");
+    } catch {
+      // Almacenamiento bloqueado: no se recuerda, pero pliega igual.
+    }
+  }
   const esCoach = usuario.role === "coach";
 
   const [ejerciciosQ, seriesQ, catalogoQ] = useQueries({
@@ -41,27 +62,73 @@ export function WorkoutCard({
     ],
   });
 
-  const ejercicios = ejerciciosQ.data ?? [];
+  const reordenar = useMutation({
+    mutationFn: (ids: number[]) => api.reorderExercises(workout.id, ids),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["ejercicios", workout.id] });
+      setOrdenLocal(null);
+    },
+  });
+
+  const sinOrdenar = ejerciciosQ.data ?? [];
+  const ejercicios = ordenLocal
+    ? (ordenLocal
+        .map((id) => sinOrdenar.find((e) => e.id === id))
+        .filter(Boolean) as typeof sinOrdenar)
+    : sinOrdenar;
+
+  function mover(desde: number, hasta: number) {
+    const ids = ejercicios.map((e) => e.id);
+    const i = ids.indexOf(desde);
+    const j = ids.indexOf(hasta);
+    if (i < 0 || j < 0 || i === j) return;
+    ids.splice(j, 0, ids.splice(i, 1)[0]);
+    setOrdenLocal(ids);
+    reordenar.mutate(ids);
+  }
+
+  function desplazar(id: number, salto: number) {
+    const ids = ejercicios.map((e) => e.id);
+    const destino = ids.indexOf(id) + salto;
+    if (destino < 0 || destino >= ids.length) return;
+    mover(id, ids[destino]);
+  }
   const series = seriesQ.data ?? [];
   const catalogo = catalogoQ.data ?? [];
 
   return (
     <section className="card entreno">
       <div className="entreno-head">
-        <div className="stack">
-          <div className="row" style={{ gap: "var(--sp-3)" }}>
-            <strong>{workout.name}</strong>
-            <StatusPill status={workout.status} />
-          </div>
-          <span className="muted celda-meta">
-            {diaNombre} · {formatoCorto(fecha)}
+        <button
+          className="entreno-plegar"
+          onClick={alternarPlegado}
+          aria-expanded={!plegado}
+          aria-label={plegado ? "Desplegar la sesión" : "Plegar la sesión"}
+        >
+          <span className={`chevron ${plegado ? "" : "abierto"}`}>
+            <Icon name="chevronRight" size={16} />
           </span>
-        </div>
+          <span className="stack">
+            <span className="row" style={{ gap: "var(--sp-3)" }}>
+              <strong>{workout.name}</strong>
+              <StatusPill status={workout.status} />
+            </span>
+            <span className="muted celda-meta">
+              {diaNombre} · {formatoCorto(fecha)}
+              {plegado && ejercicios.length > 0 && (
+                <> · {ejercicios.length} ejercicios · {series.length} series</>
+              )}
+            </span>
+          </span>
+        </button>
         {editable && esCoach && (
           <div className="row" style={{ gap: 4 }}>
             <button
               className="btn ghost sm"
-              onClick={() => setAnadiendo((v) => !v)}
+              onClick={() => {
+                setPlegado(false);
+                setAnadiendo((v) => !v);
+              }}
             >
               <Icon name="plus" size={15} />
               Ejercicio
@@ -71,22 +138,23 @@ export function WorkoutCard({
         )}
       </div>
 
-      {anadiendo && (
+      {!plegado && anadiendo && (
         <BuscadorEjercicios
           workoutId={workout.id}
           onHecho={() => setAnadiendo(false)}
         />
       )}
 
-      {ejercicios.length === 0 ? (
+      {plegado ? null : ejercicios.length === 0 ? (
         <p className="entreno-vacio">Sin ejercicios todavía.</p>
       ) : (
         <ul className="ejercicios">
-          {ejercicios.map((e) => (
+          {ejercicios.map((e, i) => (
             <FilaEjercicio
               key={e.id}
               exerciseId={e.id}
-              posicion={e.position}
+              posicion={i + 1}
+              notas={e.notes}
               workoutId={workout.id}
               definicion={catalogo.find(
                 (d: ExerciseDefinition) => d.id === e.definition_id
@@ -95,6 +163,23 @@ export function WorkoutCard({
               athleteId={bloque.athlete_id}
               editable={editable}
               esCoach={esCoach}
+              arrastrable={editable && esCoach && ejercicios.length > 1}
+              arrastrando={arrastrando === e.id}
+              resaltado={encima === e.id && arrastrando !== e.id}
+              primero={i === 0}
+              ultimo={i === ejercicios.length - 1}
+              onEmpezar={() => setArrastrando(e.id)}
+              onEncima={() => setEncima(e.id)}
+              onSoltar={() => {
+                if (arrastrando !== null) mover(arrastrando, e.id);
+                setArrastrando(null);
+                setEncima(null);
+              }}
+              onTerminar={() => {
+                setArrastrando(null);
+                setEncima(null);
+              }}
+              onDesplazar={(salto) => desplazar(e.id, salto)}
             />
           ))}
         </ul>
@@ -106,21 +191,43 @@ export function WorkoutCard({
 function FilaEjercicio({
   exerciseId,
   posicion,
+  notas,
   workoutId,
   definicion,
   series,
   athleteId,
   editable,
   esCoach,
+  arrastrable,
+  arrastrando,
+  resaltado,
+  primero,
+  ultimo,
+  onEmpezar,
+  onEncima,
+  onSoltar,
+  onTerminar,
+  onDesplazar,
 }: {
   exerciseId: number;
   posicion: number;
+  notas: string | null;
   workoutId: number;
   definicion?: ExerciseDefinition;
   series: SetLog[];
   athleteId: string;
   editable: boolean;
   esCoach: boolean;
+  arrastrable: boolean;
+  arrastrando: boolean;
+  resaltado: boolean;
+  primero: boolean;
+  ultimo: boolean;
+  onEmpezar: () => void;
+  onEncima: () => void;
+  onSoltar: () => void;
+  onTerminar: () => void;
+  onDesplazar: (salto: number) => void;
 }) {
   const mejor = series.reduce<number | null>(
     (max, s) =>
@@ -131,9 +238,30 @@ function FilaEjercicio({
   );
 
   return (
-    <li className="ejercicio">
+    <li
+      className={`ejercicio ${arrastrando ? "arrastrando" : ""} ${
+        resaltado ? "resaltado" : ""
+      }`}
+      draggable={arrastrable}
+      onDragStart={onEmpezar}
+      onDragEnd={onTerminar}
+      onDragOver={(e) => {
+        // Sin esto el navegador no deja soltar aqui.
+        e.preventDefault();
+        onEncima();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onSoltar();
+      }}
+    >
       <div className="ejercicio-head">
-        <span className="ejercicio-pos num">{posicion}</span>
+        <span
+          className={`ejercicio-pos num ${arrastrable ? "agarre" : ""}`}
+          title={arrastrable ? "Arrastra para cambiarlo de sitio" : ""}
+        >
+          {posicion}
+        </span>
         <span className="grow">
           <strong>{definicion?.name ?? `Ejercicio ${exerciseId}`}</strong>
           {definicion?.muscle_group && (
@@ -144,10 +272,37 @@ function FilaEjercicio({
           )}
         </span>
         {mejor && <span className="e1rm num">1RM est. {mejor} kg</span>}
+        {arrastrable && (
+          <span className="mover">
+            <button
+              className="btn subtle sm"
+              disabled={primero}
+              aria-label="Subir el ejercicio"
+              onClick={() => onDesplazar(-1)}
+            >
+              ↑
+            </button>
+            <button
+              className="btn subtle sm"
+              disabled={ultimo}
+              aria-label="Bajar el ejercicio"
+              onClick={() => onDesplazar(1)}
+            >
+              ↓
+            </button>
+          </span>
+        )}
         {editable && esCoach && (
           <QuitarEjercicio exerciseId={exerciseId} workoutId={workoutId} />
         )}
       </div>
+
+      <NotaEjercicio
+        exerciseId={exerciseId}
+        workoutId={workoutId}
+        notas={notas}
+        editable={editable && esCoach}
+      />
 
       <div className="ejercicio-cuerpo">
         <UltimaVez exerciseId={exerciseId} />
@@ -676,5 +831,90 @@ function BorrarSesion({
         No
       </button>
     </span>
+  );
+}
+
+
+// Lo que el coach le quiere decir al atleta sobre ESTE ejercicio.
+// El atleta la ve siempre; editarla es cosa del coach.
+function NotaEjercicio({
+  exerciseId,
+  workoutId,
+  notas,
+  editable,
+}: {
+  exerciseId: number;
+  workoutId: number;
+  notas: string | null;
+  editable: boolean;
+}) {
+  const qc = useQueryClient();
+  const [editando, setEditando] = useState(false);
+  const [texto, setTexto] = useState(notas ?? "");
+
+  const guardar = useMutation({
+    mutationFn: () => api.updateExercise(exerciseId, { notes: texto.trim() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ejercicios", workoutId] });
+      setEditando(false);
+    },
+  });
+
+  if (editando)
+    return (
+      <div className="nota-editar">
+        <textarea
+          className="input"
+          rows={2}
+          maxLength={500}
+          value={texto}
+          autoFocus
+          placeholder="Baja controlado, agarre estrecho, para 1s abajo…"
+          onChange={(e) => setTexto(e.target.value)}
+        />
+        {guardar.error && <ErrorBox error={guardar.error} />}
+        <div className="row" style={{ gap: 6 }}>
+          <button
+            className="btn sm"
+            disabled={guardar.isPending}
+            onClick={() => guardar.mutate()}
+          >
+            {guardar.isPending ? "Guardando…" : "Guardar"}
+          </button>
+          <button
+            className="btn subtle sm"
+            onClick={() => {
+              setTexto(notas ?? "");
+              setEditando(false);
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+
+  if (!notas)
+    return editable ? (
+      <button className="nota-anadir" onClick={() => setEditando(true)}>
+        <Icon name="plus" size={13} />
+        Nota para el atleta
+      </button>
+    ) : null;
+
+  return (
+    <div className={`nota ${editable ? "editable" : ""}`}>
+      <span className="nota-etiqueta">Nota</span>
+      <span className="nota-texto">{notas}</span>
+      {editable && (
+        <button
+          className="btn subtle sm"
+          aria-label="Editar la nota"
+          onClick={() => setEditando(true)}
+        >
+          Editar
+        </button>
+      )}
+    </div>
   );
 }

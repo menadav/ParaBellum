@@ -205,6 +205,11 @@ export const api = {
   deleteWorkout: (id: number) => del(`/workouts/${id}`),
 
   removeExercise: (id: number) => del(`/exercises/${id}`),
+  updateExercise: (
+    exerciseId: number,
+    body: { notes?: string; superset_group?: string }
+  ) => patch<Exercise>(`/exercises/${exerciseId}`, body),
+
   reorderExercises: (workoutId: number, exercise_ids: number[]) =>
     put<Exercise[]>(`/workouts/${workoutId}/exercises/order`, {
       exercise_ids,

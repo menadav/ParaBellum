@@ -4,5 +4,6 @@ import db
 
 
 def get_conn() -> Iterator[psycopg.Connection]:
-    with db.transaction() as conn:
+    # Del pool, no una conexion nueva: abrir una cuesta ~225 ms.
+    with db.prestada() as conn:
         yield conn

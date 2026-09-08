@@ -1,6 +1,7 @@
 
 import datetime
 import io
+from contextlib import asynccontextmanager
 import json
 import os
 import uuid
@@ -11,6 +12,7 @@ from fastapi import Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from openpyxl import load_workbook
 
+import db
 from api.auth import get_current_user, require_coach
 from api.deps import get_conn
 from api.schemas import (
@@ -41,7 +43,17 @@ from repositories import set_logs, set_prescriptions, workouts
 from services import access, export, import_excel, importador
 from services import planning, semanas
 
+@asynccontextmanager
+async def ciclo_de_vida(_app: FastAPI):
+    # Se abre una vez al arrancar y se cierra al parar. Si se abriera en
+    # cada peticion no serviria de nada tener pool.
+    db.abrir_pool()
+    yield
+    db.cerrar_pool()
+
+
 app = FastAPI(
+    lifespan=ciclo_de_vida,
     title="ParaBellum Coaching",
     description="API de la plataforma de entrenamiento.",
     version="0.2.0",
@@ -131,7 +143,7 @@ def raiz() -> dict:
 @app.get("/health", tags=["sistema"])
 def health(conn: psycopg.Connection = Depends(get_conn)) -> dict:
     conn.execute("select 1")
-    return {"status": "ok", "database": "conectada"}
+    return {"status": "ok", "database": "conectada", **db.estado_pool()}
 
 
 # ---------------------------------------------------------------------
